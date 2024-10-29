@@ -39,3 +39,10 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python main.py
+
+
+      - name: Upload Vulnerability Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: Vulnerability Report
+          path: vulnerability_report.md

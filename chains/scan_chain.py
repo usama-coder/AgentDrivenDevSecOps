@@ -4,27 +4,29 @@ import json
 
 
 def scan_chain(modified_files):
-
     issues = []
     for file_path in modified_files:
         try:
-            # Run Bandit on each modified file
             result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
-
-            # Parse JSON output from Bandit
             output_data = json.loads(result.stdout)
-            if output_data.get("results"):
-                issues.extend(output_data["results"])  # Collect issues found in each file
+
+            for issue in output_data.get("results", []):
+                # Example structured data for each issue
+                issues.append({
+                    "file": file_path,
+                    "line": issue.get("line_number", 1),
+                    "description": issue.get("issue_text", "Unknown issue"),
+                    "severity": issue.get("issue_severity", "LOW"),
+                    "bad_practice": "try:\n    some_important_code()\nexcept:\n    print('Error')",
+                    "good_practice": "try:\n    some_important_code()\nexcept Exception:\n    print('Error')"
+                })
 
         except Exception as e:
             print(f"Error running Bandit scan on {file_path}: {e}")
 
-    return {"issues": issues}
-
+    return issues
 def parse_bandit_output(output_data):
-    """
-    Processes Bandit output to extract vulnerabilities.
-    """
+
     issues = []
     for issue in output_data.get("results", []):
         issue_text = issue.get("issue_text", "")
