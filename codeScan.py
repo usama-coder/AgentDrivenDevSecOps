@@ -28,7 +28,4 @@ def run_shell_command():
     command = "ls " + input("Enter directory: ")
     subprocess.run(command, shell=True)  # Vulnerable to shell injection
 
-def insufficient_permissions():
-    # File operation without sufficient permissions
-    with open("/etc/passwd", "w") as file:  # Potentially dangerous file write operation
-        file.write("New user")
+
