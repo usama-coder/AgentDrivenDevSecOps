@@ -3,28 +3,23 @@ import os
 import json
 
 
-def scan_chain():
-    try:
-        # Run Bandit scan on the project directory
-        code_scan_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'codeScan.py'))
+def scan_chain(modified_files):
 
-        # Run Bandit with JSON output for easier parsing
-        result = subprocess.run(['bandit', '-r', code_scan_path, '-f', 'json'], capture_output=True, text=True)
+    issues = []
+    for file_path in modified_files:
+        try:
+            # Run Bandit on each modified file
+            result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
 
-        # Check if output is empty (meaning no issues found)
+            # Parse JSON output from Bandit
+            output_data = json.loads(result.stdout)
+            if output_data.get("results"):
+                issues.extend(output_data["results"])  # Collect issues found in each file
 
-        # Parse the JSON output if issues are found
-        output_data = json.loads(result.stdout)
-        if output_data.get("results"):
-            print("Vulnerabilities found.")
-            return {"issues": parse_bandit_output(output_data)}
-        else:
-            print("No vulnerabilities found.")
-            return {"issues": []}
-    except Exception as e:
-        print(f"Error running Bandit scan: {e}")
-        return {"issues": []}
+        except Exception as e:
+            print(f"Error running Bandit scan on {file_path}: {e}")
 
+    return {"issues": issues}
 
 def parse_bandit_output(output_data):
     """

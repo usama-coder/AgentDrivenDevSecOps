@@ -11,13 +11,3 @@ if __name__ == "__main__":
 
 
 
-# for azure web hooks
-
-# ``@app.route('/webhook', methods=['POST'])
-# def webhook():
-#     # Handle incoming webhook payload from Azure Repo
-#     handle_vulnerability()
-#     return "Webhook received", 200
-#
-# if __name__ == "__main__":
-#     app.run(port=5000)
