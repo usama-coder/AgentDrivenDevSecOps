@@ -7,20 +7,28 @@ def scan_chain(modified_files):
     issues = []
     for file_path in modified_files:
         try:
+            # Run Bandit or similar tool
             result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
             output_data = json.loads(result.stdout)
+            if output_data.get("results"):
+                for issue in output_data["results"]:
+                    # Collect issue details
+                    line = issue.get("line_number", 1)
+                    description = issue.get("issue_text", "Unknown issue")
+                    severity = issue.get("issue_severity", "LOW")
 
-            for issue in output_data.get("results", []):
-                # Example structured data for each issue
-                issues.append({
-                    "file": file_path,
-                    "line": issue.get("line_number", 1),
-                    "description": issue.get("issue_text", "Unknown issue"),
-                    "severity": issue.get("issue_severity", "LOW"),
-                    "bad_practice": "try:\n    some_important_code()\nexcept:\n    print('Error')",
-                    "good_practice": "try:\n    some_important_code()\nexcept Exception:\n    print('Error')"
-                })
+                    # Determine annotation type
+                    annotation_type = "error" if severity in ["HIGH", "MEDIUM"] else "warning"
+                    # Output GitHub annotation format
+                    print(f"::{annotation_type} file={file_path},line={line}::{description}")
 
+                    # Append to issues list if needed for further processing
+                    issues.append({
+                        "file": file_path,
+                        "line": line,
+                        "description": description,
+                        "severity": severity
+                    })
         except Exception as e:
             print(f"Error running Bandit scan on {file_path}: {e}")
 
