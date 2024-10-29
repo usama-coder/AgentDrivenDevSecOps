@@ -5,11 +5,11 @@ from agents.vulnerability_agent import handle_vulnerability,  generate_markdown_
 
 def main():
     # Call handle_vulnerability to get the scan report
-    report = handle_vulnerability()
+    issues = handle_vulnerability()
 
     # Generate a Markdown report if there are any issues
-    if report['issues']:
-        generate_markdown_report(report['issues'])
+    if issues:
+        generate_markdown_report(issues)
     else:
         print("No vulnerabilities found.")
 
