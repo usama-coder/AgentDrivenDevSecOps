@@ -23,9 +23,6 @@ def weak_hashing(password):
     # Weak hashing algorithm
     hashed_password = hashlib.md5(password.encode()).hexdigest()  # MD5 is insecure
 
-def run_shell_command():
-    # Shell injection vulnerability
-    command = "ls " + input("Enter directory: ")
-    subprocess.run(command, shell=True)  # Vulnerable to shell injection
+
 
 
