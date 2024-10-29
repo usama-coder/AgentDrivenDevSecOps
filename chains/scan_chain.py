@@ -3,6 +3,7 @@ import os
 import json
 
 
+
 def scan_chain(modified_files):
     issues = []
     for file_path in modified_files:
@@ -22,17 +23,32 @@ def scan_chain(modified_files):
                     # Output GitHub annotation format
                     print(f"::{annotation_type} file={file_path},line={line}::{description}")
 
-                    # Append to issues list if needed for further processing
+                    # Define default bad and good practices based on the issue description
+                    bad_practice = "Example of vulnerable code not provided."
+                    good_practice = "Example of secure code not provided."
+
+                    # Customize examples based on description keywords (as an example)
+                    if "subprocess" in description:
+                        bad_practice = "subprocess.run(command, shell=True)"
+                        good_practice = "subprocess.run(shlex.split(command))"
+                    elif "exec" in description:
+                        bad_practice = "exec(untrusted_input)"
+                        good_practice = "Avoid using exec() with untrusted input."
+
+                    # Append to issues list with additional keys
                     issues.append({
                         "file": file_path,
                         "line": line,
                         "description": description,
-                        "severity": severity
+                        "severity": severity,
+                        "bad_practice": bad_practice,
+                        "good_practice": good_practice
                     })
         except Exception as e:
             print(f"Error running Bandit scan on {file_path}: {e}")
 
     return issues
+
 def parse_bandit_output(output_data):
 
     issues = []
