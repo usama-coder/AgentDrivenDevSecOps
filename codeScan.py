@@ -38,12 +38,10 @@ def call_method(obj, method_name):
     method()
 
 
-def weak_hashing(password):
-    # Weak hashing algorithm
-    hashed_password = hashlib.md5(password.encode()).hexdigest()  # MD5 is insecure
 
 import random
 
-def generate_token():
-
-    return str(random.random())[2:]
+def insufficient_permissions():
+    # File operation without sufficient permissions
+    with open("/etc/passwd", "w") as file:  # Potentially dangerous file write operation
+        file.write("New user")
