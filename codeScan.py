@@ -14,11 +14,11 @@ def insecure_sql_injection(user_id):
     cursor.execute(query)  # Vulnerable to SQL Injection
 
 def hardcoded_secret_key():
-    # Hardcoded secret
+
     secret_key = "my_super_secret_key_1234"
 
 
-# Vulnerable Code
+
 with open("config.txt", "w") as file:
     file.write("configuration data")
 
