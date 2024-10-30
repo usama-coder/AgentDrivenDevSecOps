@@ -20,7 +20,6 @@ def hardcoded_secret_key():
 from jinja2 import Template
 
 def render_template(template_string, context):
-    # Vulnerable Code
     template = Template(template_string)
     return template.render(context)
 
