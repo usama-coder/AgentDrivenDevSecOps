@@ -2,12 +2,12 @@ import sqlite3
 import requests
 
 def get_data(url):
-    # Vulnerable Code
+
     response = requests.get(url, verify=False)
     return response.text
 
 def insecure_sql_injection(user_id):
-    # SQL Injection vulnerability
+
     conn = sqlite3.connect('example.db')
     cursor = conn.cursor()
     query = "SELECT * FROM users WHERE id = '" + user_id + "'"
