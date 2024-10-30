@@ -8,9 +8,22 @@ def scan_chain(modified_files):
     issues = []
     for file_path in modified_files:
         try:
-            # Run Bandit or similar tool
+            # Run Bandit
             result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
-            output_data = json.loads(result.stdout)
+
+            # Check if Bandit ran successfully
+            if result.returncode != 0:
+                print(f"Error running Bandit on {file_path}: {result.stderr}")
+                continue
+
+            # Parse JSON output
+            try:
+                output_data = json.loads(result.stdout)
+            except json.JSONDecodeError as e:
+                print(f"Error decoding JSON from Bandit output on {file_path}: {e}")
+                continue
+
+            # Process each issue from Bandit's output
             if output_data.get("results"):
                 for issue in output_data["results"]:
                     # Collect issue details
@@ -27,7 +40,7 @@ def scan_chain(modified_files):
                     bad_practice = "Example of vulnerable code not provided."
                     good_practice = "Example of secure code not provided."
 
-                    # Customize examples based on description keywords (as an example)
+                    # Customize examples based on description keywords
                     if "subprocess" in description:
                         bad_practice = "subprocess.run(command, shell=True)"
                         good_practice = "subprocess.run(shlex.split(command))"
@@ -44,21 +57,12 @@ def scan_chain(modified_files):
                         "bad_practice": bad_practice,
                         "good_practice": good_practice
                     })
+
         except Exception as e:
             print(f"Error running Bandit scan on {file_path}: {e}")
 
     return issues
 
-def parse_bandit_output(output_data):
 
-    issues = []
-    for issue in output_data.get("results", []):
-        issue_text = issue.get("issue_text", "")
-        code_snippet = issue.get("code", "")  # Assuming Bandit provides code snippets
 
-        issues.append({
-            "issue_text": issue_text,
-            "code": code_snippet
-        })
 
-    return issues

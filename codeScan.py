@@ -19,9 +19,6 @@ def unsafe_deserialization(data):
     # Unsafe deserialization with pickle
     user_data = pickle.loads(data)  # Vulnerable to code injection attacks
 
-def weak_hashing(password):
-    # Weak hashing algorithm
-    hashed_password = hashlib.md5(password.encode()).hexdigest()  # MD5 is insecure
 
 
 

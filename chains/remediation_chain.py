@@ -6,14 +6,14 @@ from langchain.prompts import PromptTemplate
 llm = ChatOpenAI(model="gpt-4")
 
 remediation_template = """
-You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes. 
+You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes and only give to the point and precise description. 
 Only include the code fixes with the format:
 - Vulnerable Code:
 - Recommended Fix:
 
 {code}
 
-Make sure the recommendations are Python-specific and relevant to common security issues like injection attacks, unsafe function usage, or improper input handling.
+Make sure the recommendations are Python-specific.
 """
 
 
