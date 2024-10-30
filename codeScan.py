@@ -31,7 +31,7 @@ class MyClass:
         print("Method B")
 
 def call_method(obj, method_name):
-    # Vulnerable Code
+
     method = getattr(obj, method_name)
     method()
 
