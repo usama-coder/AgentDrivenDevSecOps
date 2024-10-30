@@ -17,31 +17,32 @@ def hardcoded_secret_key():
 
     secret_key = "my_super_secret_key_1234"
 
-from jinja2 import Template
-
-def render_template(template_string, context):
-    # Vulnerable Code
-    template = Template(template_string)
-    return template.render(context)
-
-
-class MyClass:
-    def method_a(self):
-        print("Method A")
-
-    def method_b(self):
-        print("Method B")
-
-def call_method(obj, method_name):
-
-    method = getattr(obj, method_name)
-    method()
-
-
-
-import random
-
 def insufficient_permissions():
     # File operation without sufficient permissions
     with open("/etc/passwd", "w") as file:  # Potentially dangerous file write operation
         file.write("New user")
+
+import subprocess
+
+def delete_file(filename):
+    # Vulnerable Code
+    subprocess.call("rm -rf " + filename, shell=True)
+
+import requests
+
+import hashlib
+
+def hash_password(password):
+    # Vulnerable Code
+    return hashlib.md5(password.encode()).hexdigest()
+
+def calculate(expression):
+    # Vulnerable Code
+    return eval(expression)
+
+import os
+
+def read_file(filepath):
+    # Vulnerable Code
+    with open("/var/data/" + filepath, "r") as f:
+        return f.read()
