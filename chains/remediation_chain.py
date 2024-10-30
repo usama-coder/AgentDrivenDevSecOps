@@ -9,8 +9,8 @@ remediation_template = """
 You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes and only give to the point and precise description. Ignore all the imports and dont give code from importing till end, just give the fix for the line which has vulnerability
 Only include the code fixes with the format:
  Vulnerable Code:
- Recommended Fix(only code):
-/n/n recommended fix description (precise):
+ Recommended Fix:
+/n/n recommended fix description:
 
 {code}
 
