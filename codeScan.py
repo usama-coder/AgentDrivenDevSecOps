@@ -15,9 +15,7 @@ def hardcoded_secret_key():
     # Hardcoded secret
     secret_key = "my_super_secret_key_1234"
 
-def unsafe_deserialization(data):
-    # Unsafe deserialization with pickle
-    user_data = pickle.loads(data)  # Vulnerable to code injection attacks
+
 
 
 
