@@ -26,23 +26,12 @@ def scan_chain(modified_files):
                     line = issue.get("line_number", 1)
                     description = issue.get("issue_text", "Unknown issue")
                     severity = issue.get("issue_severity", "LOW")
+                    code =issue.get("code")
 
                     # Determine annotation type
                     annotation_type = "error" if severity in ["HIGH", "MEDIUM"] else "warning"
                     # Output GitHub annotation format
                     print(f"::{annotation_type} file={file_path},line={line}::{description}")
-
-                    # Define default bad and good practices based on the issue description
-                    bad_practice = "Example of vulnerable code not provided."
-                    good_practice = "Example of secure code not provided."
-
-                    # Customize examples based on description keywords
-                    if "subprocess" in description:
-                        bad_practice = "subprocess.run(command, shell=True)"
-                        good_practice = "subprocess.run(shlex.split(command))"
-                    elif "exec" in description:
-                        bad_practice = "exec(untrusted_input)"
-                        good_practice = "Avoid using exec() with untrusted input."
 
                     # Append to issues list with additional keys
                     issues.append({
@@ -50,8 +39,8 @@ def scan_chain(modified_files):
                         "line": line,
                         "description": description,
                         "severity": severity,
-                        "bad_practice": bad_practice,
-                        "good_practice": good_practice
+                        "code" : code,
+
                     })
 
         except Exception as e:

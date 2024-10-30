@@ -8,8 +8,9 @@ llm = ChatOpenAI(model="gpt-4")
 remediation_template = """
 You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes and only give to the point and precise description. Ignore all the imports and dont give code from importing till end, just give the fix for the line which has vulnerability
 Only include the code fixes with the format:
-- Vulnerable Code:
-- Recommended Fix:
+ Vulnerable Code:
+ Recommended Fix(only code):
+/n/n recommended fix description (precise):
 
 {code}
 
@@ -62,4 +63,4 @@ def run_remediation_chain(vulnerable_code):
     filtered_response = filter_response(response)
     print("Filtered Code Fixes and Recommendations:")
     print(filtered_response)
-    return filtered_response
+    return response
