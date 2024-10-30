@@ -17,10 +17,12 @@ def hardcoded_secret_key():
 
     secret_key = "my_super_secret_key_1234"
 
+from jinja2 import Template
 
-
-with open("config.txt", "w") as file:
-    file.write("configuration data")
+def render_template(template_string, context):
+    # Vulnerable Code
+    template = Template(template_string)
+    return template.render(context)
 
 
 class MyClass:
