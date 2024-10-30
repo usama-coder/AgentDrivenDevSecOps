@@ -40,5 +40,5 @@ def call_method(obj, method_name):
 import random
 
 def generate_token():
-    # Vulnerable Code
+
     return str(random.random())[2:]
