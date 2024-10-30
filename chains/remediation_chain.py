@@ -6,19 +6,21 @@ from langchain.prompts import PromptTemplate
 llm = ChatOpenAI(model="gpt-4")
 
 remediation_template = """
-You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes. 
+You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes and only give to the point and precise description. Ignore all the imports and dont give code from importing till end, just give the fix for the line which has vulnerability
 Only include the code fixes with the format:
-- Vulnerable Code:
-- Recommended Fix:
+ Vulnerable Code:
+ Recommended Fix:
+/n/n recommended fix description:
 
 {code}
 
-Make sure the recommendations are Python-specific and relevant to common security issues like injection attacks, unsafe function usage, or improper input handling.
+Make sure the recommendations are Python-specific.
 """
 
 
 prompt = PromptTemplate(template=remediation_template, input_variables=["code"])
 remediation_chain = LLMChain(prompt=prompt, llm=llm)
+
 
 def filter_response(response):
     sections = []
@@ -36,18 +38,29 @@ def filter_response(response):
         elif current_section and (line.startswith("```") or line.strip()):
             current_section[list(current_section.keys())[-1]] += f"\n{line}"
 
-    # Format the output
+    # Process each section to include only modified lines within the "Recommended Fix" section
     formatted_response = ""
     for section in sections:
         vulnerable_code = section.get("Vulnerable Code", "").replace("- Vulnerable Code:", "Vulnerable Code:")
         recommended_fix = section.get("Recommended Fix", "").replace("- Recommended Fix:", "Recommended Fix:")
-        formatted_response += f"{vulnerable_code}\n\n{recommended_fix}\n\n{'-'*40}\n"
+
+        # Filter out any lines that start with imports (e.g., "import") in the recommended fix
+        filtered_fix_lines = [
+            line for line in recommended_fix.splitlines()
+            if not line.strip().startswith("import") and line.strip()
+        ]
+
+        # Rebuild the "Recommended Fix" section with only relevant lines
+        filtered_recommended_fix = "\n".join(filtered_fix_lines)
+
+        formatted_response += f"{vulnerable_code}\n\n{filtered_recommended_fix}\n\n{'-' * 40}\n"
 
     return formatted_response.strip()
+
 
 def run_remediation_chain(vulnerable_code):
     response = remediation_chain.run({"code": vulnerable_code})
     filtered_response = filter_response(response)
     print("Filtered Code Fixes and Recommendations:")
     print(filtered_response)
-    return filtered_response
+    return response

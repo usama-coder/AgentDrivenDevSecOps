@@ -1,15 +1,26 @@
-import subprocess
+import sqlite3
+import requests
 
-def list_directory(directory):
+def get_data(url):
 
-    command = f"ls {directory}"
-    subprocess.run(command, shell=True)
+    response = requests.get(url, verify=False)
+    return response.text
 
+def insecure_sql_injection(user_id):
+
+    conn = sqlite3.connect('example.db')
+    cursor = conn.cursor()
+    query = "SELECT * FROM users WHERE id = '" + user_id + "'"
+    cursor.execute(query)  # Vulnerable to SQL Injection
+
+def hardcoded_secret_key():
+
+    secret_key = "my_super_secret_key_1234"
 
 from jinja2 import Template
 
 def render_template(template_string, context):
-
+    # Vulnerable Code
     template = Template(template_string)
     return template.render(context)
 
@@ -25,3 +36,14 @@ def call_method(obj, method_name):
 
     method = getattr(obj, method_name)
     method()
+
+
+def weak_hashing(password):
+    # Weak hashing algorithm
+    hashed_password = hashlib.md5(password.encode()).hexdigest()  # MD5 is insecure
+
+import random
+
+def generate_token():
+
+    return str(random.random())[2:]
