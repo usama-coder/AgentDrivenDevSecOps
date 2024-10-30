@@ -1,7 +1,3 @@
-import os
-import subprocess
-import pickle
-import hashlib
 import sqlite3
 
 def insecure_sql_injection(user_id):
