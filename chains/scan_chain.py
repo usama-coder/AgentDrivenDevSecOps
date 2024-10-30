@@ -11,10 +11,6 @@ def scan_chain(modified_files):
             # Run Bandit
             result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
 
-            # Check if Bandit ran successfully
-            if result.returncode != 0:
-                print(f"Error running Bandit on {file_path}: {result.stderr}")
-                continue
 
             # Parse JSON output
             try:
