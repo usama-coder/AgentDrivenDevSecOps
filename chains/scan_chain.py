@@ -3,51 +3,140 @@ import os
 import json
 
 
-
-def scan_chain(modified_files):
+def run_bandit_scan(file_path):
+    """Run Bandit scan and return the results."""
     issues = []
-    for file_path in modified_files:
-        try:
-            # Run Bandit
-            result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
+    try:
+        result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
+        output_data = json.loads(result.stdout)
 
+        # Process each issue from Bandit's output
+        if output_data.get("results"):
+            for issue in output_data["results"]:
+                line = issue.get("line_number", 1)
+                description = issue.get("issue_text", "Unknown issue")
+                severity = issue.get("issue_severity", "LOW")
+                code = issue.get("code")
 
-            # Parse JSON output
-            try:
-                output_data = json.loads(result.stdout)
-            except json.JSONDecodeError as e:
-                print(f"Error decoding JSON from Bandit output on {file_path}: {e}")
-                continue
+                annotation_type = "error" if severity in ["HIGH", "MEDIUM"] else "warning"
+                print(f"::{annotation_type} file={file_path},line={line}::{description}")
 
-            # Process each issue from Bandit's output
-            if output_data.get("results"):
-                for issue in output_data["results"]:
-                    # Collect issue details
-                    line = issue.get("line_number", 1)
-                    description = issue.get("issue_text", "Unknown issue")
-                    severity = issue.get("issue_severity", "LOW")
-                    code =issue.get("code")
-
-                    # Determine annotation type
-                    annotation_type = "error" if severity in ["HIGH", "MEDIUM"] else "warning"
-                    # Output GitHub annotation format
-                    print(f"::{annotation_type} file={file_path},line={line}::{description}")
-
-                    # Append to issues list with additional keys
-                    issues.append({
-                        "file": file_path,
-                        "line": line,
-                        "description": description,
-                        "severity": severity,
-                        "code" : code,
-
-                    })
-
-        except Exception as e:
-            print(f"Error running Bandit scan on {file_path}: {e}")
+                issues.append({
+                    "tool": "Bandit",
+                    "file": file_path,
+                    "line": line,
+                    "description": description,
+                    "severity": severity,
+                    "code": code,
+                })
+    except subprocess.CalledProcessError as e:
+        print(f"Error running Bandit on {file_path}: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding Bandit JSON for {file_path}: {e}")
 
     return issues
 
 
+def run_safety_scan():
+    """Run Safety scan for dependencies and return the results."""
+    issues = []
+    try:
+        # Run Safety with JSON output
+        result = subprocess.run(['safety', 'check', '--json'], capture_output=True, text=True)
+
+        # Parse the output into a Python object
+        output_data = json.loads(result.stdout)
+
+        # Safety outputs a dictionary, but "vulnerabilities" is typically a key
 
 
+        # Process each vulnerability
+        for vuln in output_data:
+            description = f"{vuln['package_name']} - {vuln['advisory']}"
+            severity = "HIGH" if vuln.get("vulnerable_spec") else "LOW"
+
+            issues.append({
+                "tool": "Safety",
+                "file": "requirements.txt",
+                "line": 1,
+                "description": description,
+                "severity": severity,
+                "code": "",  # Safety is dependency-based, so no specific code snippet
+            })
+    except subprocess.CalledProcessError as e:
+        print(f"Error running Safety scan: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding Safety JSON: {e}")
+
+    return issues
+
+def run_semgrep_scan(file_path):
+    """Run Semgrep scan and return the results."""
+    issues = []
+    try:
+        result = subprocess.run(['semgrep', '--config','p/security/owasp-top-ten', '--json', file_path], capture_output=True, text=True)
+
+        # Handle empty output
+        if not result.stdout.strip():
+            print(f"Semgrep returned no output for {file_path}.")
+            return issues
+
+        output_data = json.loads(result.stdout)
+
+        # Process each issue from Semgrep's output
+        if "results" in output_data:
+            for issue in output_data["results"]:
+                line = issue["start"]["line"]
+                description = issue["extra"]["message"]
+                severity = issue["extra"].get("severity", "LOW")
+
+                annotation_type = "error" if severity in ["HIGH", "MEDIUM"] else "warning"
+                print(f"::{annotation_type} file={file_path},line={line}::{description}")
+
+                issues.append({
+                    "tool": "Semgrep",
+                    "file": file_path,
+                    "line": line,
+                    "description": description,
+                    "severity": severity,
+                    "code": issue["extra"].get("lines", ""),
+                })
+    except subprocess.CalledProcessError as e:
+        print(f"Error running Semgrep scan on {file_path}: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from Semgrep output on {file_path}: {e}")
+
+    return issues
+
+
+def scan_chain(modified_files):
+    """Run all scans on the modified files."""
+    all_issues = []
+
+    # Run Bandit on each file
+    for file_path in modified_files:
+         bandit_issues = run_bandit_scan(file_path)
+         all_issues.extend(bandit_issues)
+
+    # Run Safety (only once, since it scans dependencies in requirements.txt)
+    #safety_issues = run_safety_scan()
+   # all_issues.extend(safety_issues)
+
+    # Run Semgrep on each file
+    # for file_path in modified_files:
+    #     semgrep_issues = run_semgrep_scan(file_path)
+    #     all_issues.extend(semgrep_issues)
+
+    return all_issues
+
+
+if __name__ == "__main__":
+    modified_files = ["codeScan.py"]
+
+    issues = scan_chain(modified_files)
+
+    for issue in issues:
+        print(f"Tool: {issue['tool']}, File: {issue['file']}, Line: {issue['line']}, Severity: {issue['severity']}")
+        print(f"Description: {issue['description']}")
+        print(f"Code: {issue['code']}")
+        print("-----")

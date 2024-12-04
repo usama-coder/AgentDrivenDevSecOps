@@ -17,11 +17,7 @@ def hardcoded_secret_key():
 
     secret_key = "my_super_secret_key_1234"
 
-from jinja2 import Template
 
-def render_template(template_string, context):
-    template = Template(template_string)
-    return template.render(context)
 
 
 class MyClass:
