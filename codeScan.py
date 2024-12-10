@@ -5,7 +5,6 @@ def get_data(url):
 
     response = requests.get(url, verify=False)
     return response.text
-
 def insecure_sql_injection(user_id):
 
     conn = sqlite3.connect('example.db')
@@ -16,8 +15,6 @@ def insecure_sql_injection(user_id):
 def hardcoded_secret_key():
 
     secret_key = "my_super_secret_key_1234"
-
-
 
 
 class MyClass:
@@ -31,8 +28,6 @@ def call_method(obj, method_name):
 
     method = getattr(obj, method_name)
     method()
-
-
 
 import random
 
