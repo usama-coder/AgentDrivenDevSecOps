@@ -1,9 +1,8 @@
 from langchain import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
+
 from logger import log_action
-from reflection import reflect_on_remediation_process
-import os
 
 # Initialize the LLM
 llm = ChatOpenAI(
@@ -12,6 +11,7 @@ llm = ChatOpenAI(
     openai_api_key="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",
 )
 
+# Remediation prompt template
 remediation_template = """
 You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes and only give to the point and precise description. Ignore all the imports and don't give code from importing till end, just give the fix for the line which has vulnerability.ensure the response length is less than 500 
 Only include the code fixes with the format:
@@ -25,6 +25,45 @@ Make sure the recommendations are Python-specific.
 """
 prompt = PromptTemplate(template=remediation_template, input_variables=["code"])
 remediation_chain = LLMChain(prompt=prompt, llm=llm)
+
+# Reflection prompt template
+reflection_template = """
+You are an expert code reviewer. Your task is to evaluate the quality of the following remediation response generated for a vulnerable code snippet.
+
+Remediation Response:
+{response}
+
+Evaluate the response based on the following criteria:
+1. Does the response clearly identify the vulnerable code? (Yes/No)
+2. Does the response provide a valid and secure fix? (Yes/No)
+3. Is the fix concise and avoids unnecessary complexity? (Yes/No)
+4. Is the explanation of the fix clear and sufficient? (Yes/No)
+
+Provide feedback in the following format:
+- Criteria 1: [Yes/No] - [Explanation]
+- Criteria 2: [Yes/No] - [Explanation]
+- Criteria 3: [Yes/No] - [Explanation]
+- Criteria 4: [Yes/No] - [Explanation]
+
+Overall, is the remediation response acceptable? (Yes/No)
+"""
+reflection_prompt = PromptTemplate(template=reflection_template, input_variables=["response"])
+reflection_chain = LLMChain(prompt=reflection_prompt, llm=llm)
+
+
+def reflect_with_llm(reflection_chain, response):
+    """
+    Use the reflection chain to evaluate the quality of the remediation response.
+    """
+    reflection_feedback = reflection_chain.run({"response": response})
+    print("\nReflection Feedback:")
+    print(reflection_feedback)
+
+    overall_success = "Yes" in reflection_feedback.split("Overall, is the remediation response acceptable?")[-1]
+    return {
+        "overall_success": overall_success,
+        "feedback": reflection_feedback
+    }
 
 
 def filter_response(response):
@@ -90,11 +129,8 @@ def run_remediation_chain(vulnerable_code):
             output_data={"response": response},
         )
 
-        # Reflect on the remediation output
-        reflection_criteria = {
-            "fix_length_reasonable": len(filtered_response) < 900
-        }
-        reflections = reflect_on_remediation_process(filtered_response, reflection_criteria)
+        # Reflect on the remediation output using LLM
+        reflections = reflect_with_llm(reflection_chain, filtered_response)
 
         # If the reflection indicates success, exit the retry loop
         if reflections["overall_success"]:
@@ -103,42 +139,29 @@ def run_remediation_chain(vulnerable_code):
 
         # If the reflection fails, refine the prompt for the next attempt
         print("Reflection indicates issues with the remediation. Adjusting workflow...")
-        failed_criteria = [
-            key for key, value in reflections["detailed_criteria"].items() if not value
-        ]
-        print(f"Failed criteria: {failed_criteria}")
+        print(f"Feedback: {reflections['feedback']}")
 
-        # Log the failed criteria
-        log_action(
-            agent_name="LLMRemediationAgent",
-            action="Reflection Failure",
-            input_data={"code": vulnerable_code},
-            output_data={"failed_criteria": failed_criteria, "response": response},
-        )
+        # Adjust the prompt for the next iteration
+        remediation_chain.prompt.template = """
+        You are a Python security expert. Review the following Python code for any vulnerabilities. 
+        For each identified vulnerability, provide your response in the following format:
 
-        # Adjust the prompt based on reflection
-        new_prompt = """
-      You are a Python security expert. Review the following Python code for any vulnerabilities. For each identified vulnerability, provide your response in the following format:
+        Vulnerable Code:
+        Recommended Fix:
+        Recommended fix Description:
 
- Vulnerable Code:
- Recommended Fix:
- Recommended fix Description:
+        Ensure that:
+        1. The vulnerable code line is clearly identified.
+        2. A specific recommended fix is provided.
+        3. A concise explanation of why the fix resolves the issue is included.
 
- Ensure that:
- 1. The vulnerable code line is clearly identified.
- 2. A specific recommended fix is provided.
- 3. A concise explanation of why the fix resolves the issue is included.
-
- Focus on providing actionable and clear recommendations.
-
- Code:
- {code}
-"""
-        remediation_chain.prompt.template = new_prompt
+        Code:
+        {code}
+        """
         print("Updated prompt with more specific instructions.")
 
     # If all attempts fail, log and provide fallback
-    if not reflections or not reflections["overall_success"]:
+    if not reflections["overall_success"]:
         print("All remediation attempts failed. Proceeding with fallback workflow...")
         log_action(
             agent_name="LLMRemediationAgent",
@@ -149,4 +172,3 @@ def run_remediation_chain(vulnerable_code):
         filtered_response = "Remediation unsuccessful. Please review manually."
 
     return filtered_response
-
