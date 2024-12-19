@@ -70,43 +70,48 @@ def run_safety_scan():
 
     return issues
 
-def run_semgrep_scan(file_path):
-    """Run Semgrep scan and return the results."""
+import subprocess
+import json
+
+def run_semgrep_scan(files):
+    """
+    Run Semgrep scan on the given files and return the results.
+    """
     issues = []
-    try:
-        result = subprocess.run(['semgrep', '--config','p/security/owasp-top-ten', '--json', file_path], capture_output=True, text=True)
+    for file_path in files:
+        try:
+            # Run Semgrep with OWASP Top 10 rules
+            result = subprocess.run(
+                ['semgrep', '--config', 'p/security/owasp-top-ten', '--json', file_path],
+                capture_output=True,
+                text=True
+            )
 
-        # Handle empty output
-        if not result.stdout.strip():
-            print(f"Semgrep returned no output for {file_path}.")
-            return issues
+            # Handle cases where Semgrep outputs nothing
+            if not result.stdout.strip():
+                print(f"Semgrep returned no output for {file_path}.")
+                continue
 
-        output_data = json.loads(result.stdout)
+            # Parse JSON output from Semgrep
+            output_data = json.loads(result.stdout)
 
-        # Process each issue from Semgrep's output
-        if "results" in output_data:
-            for issue in output_data["results"]:
-                line = issue["start"]["line"]
-                description = issue["extra"]["message"]
-                severity = issue["extra"].get("severity", "LOW")
-
-                annotation_type = "error" if severity in ["HIGH", "MEDIUM"] else "warning"
-                print(f"::{annotation_type} file={file_path},line={line}::{description}")
-
-                issues.append({
-                    "tool": "Semgrep",
-                    "file": file_path,
-                    "line": line,
-                    "description": description,
-                    "severity": severity,
-                    "code": issue["extra"].get("lines", ""),
-                })
-    except subprocess.CalledProcessError as e:
-        print(f"Error running Semgrep scan on {file_path}: {e}")
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON from Semgrep output on {file_path}: {e}")
+            # Process issues
+            if "results" in output_data:
+                for issue in output_data["results"]:
+                    issues.append({
+                        "file": file_path,
+                        "line": issue["start"]["line"],
+                        "description": issue["extra"]["message"],
+                        "severity": issue["extra"].get("severity", "LOW"),
+                        "vulnerable_code": issue["extra"].get("lines", "No code snippet provided"),
+                    })
+        except subprocess.CalledProcessError as e:
+            print(f"Error running Semgrep scan on {file_path}: {e}")
+        except json.JSONDecodeError as e:
+            print(f"Error decoding Semgrep output for {file_path}: {e}")
 
     return issues
+
 
 
 def scan_chain(modified_files):
@@ -123,9 +128,9 @@ def scan_chain(modified_files):
    # all_issues.extend(safety_issues)
 
     # Run Semgrep on each file
-    # for file_path in modified_files:
-    #     semgrep_issues = run_semgrep_scan(file_path)
-    #     all_issues.extend(semgrep_issues)
+    for file_path in modified_files:
+         semgrep_issues = run_semgrep_scan(file_path)
+         all_issues.extend(semgrep_issues)
 
     return all_issues
 

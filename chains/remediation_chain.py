@@ -11,13 +11,12 @@ llm = ChatOpenAI(
     openai_api_key="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",
 )
 
-# Remediation prompt template
+
 remediation_template = """
 You are a Python security expert. Review the following Python code for any security vulnerabilities and provide specific code fixes and only give to the point and precise description. Ignore all the imports and don't give code from importing till end, just give the fix for the line which has vulnerability.ensure the response length is less than 500 
 Only include the code fixes with the format:
  Vulnerable Code:
  Recommended Fix:
-\n\n Recommended fix Description:
 
 {code}
 
