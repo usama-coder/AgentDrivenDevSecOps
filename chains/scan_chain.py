@@ -88,7 +88,7 @@ def run_semgrep_scan(files):
 
             # Run Semgrep with OWASP Top 10 rules
             result = subprocess.run(
-                ['semgrep', '--config', 'p/security/owasp-top-ten', '--json', file_path],
+                ['semgrep', '--config', 'p/owasp-top-ten', '--json', file_path],
                 capture_output=True,
                 text=True
             )
