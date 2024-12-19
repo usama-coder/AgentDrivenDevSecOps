@@ -34,3 +34,5 @@ import random
 def generate_token():
 
     return str(random.random())[2:]
+def log_message(user_message):
+    print(user_message)
