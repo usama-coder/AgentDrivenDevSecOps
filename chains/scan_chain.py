@@ -47,28 +47,35 @@ def run_safety_scan():
         # Parse the output into a Python object
         output_data = json.loads(result.stdout)
 
-        # Safety outputs a dictionary, but "vulnerabilities" is typically a key
+        # Safety outputs a **list** of vulnerabilities, so we need to iterate over it
+        if isinstance(output_data, list):  # Ensure it's a list before iterating
+            for vuln in output_data:
+                if isinstance(vuln, list) and len(vuln) > 1:  # Ensure the structure is valid
+                    package_name = vuln[0]  # First element is the package name
+                    advisory = vuln[3] if len(vuln) > 3 else "No advisory available"
 
+                    # Determine severity based on known vulnerability details
+                    severity = "HIGH" if len(vuln) > 2 and vuln[2] else "LOW"
 
-        # Process each vulnerability
-        for vuln in output_data:
-            description = f"{vuln['package_name']} - {vuln['advisory']}"
-            severity = "HIGH" if vuln.get("vulnerable_spec") else "LOW"
+                    # Append the issue to the list
+                    issues.append({
+                        "tool": "Safety",
+                        "file": "requirements.txt",
+                        "line": 1,
+                        "description": f"{package_name} - {advisory}",
+                        "severity": severity,
+                        "code": "",  # Safety is dependency-based, so no specific code snippet
+                    })
+        else:
+            print("Unexpected Safety JSON structure:", output_data)
 
-            issues.append({
-                "tool": "Safety",
-                "file": "requirements.txt",
-                "line": 1,
-                "description": description,
-                "severity": severity,
-                "code": "",  # Safety is dependency-based, so no specific code snippet
-            })
     except subprocess.CalledProcessError as e:
         print(f"Error running Safety scan: {e}")
     except json.JSONDecodeError as e:
         print(f"Error decoding Safety JSON: {e}")
 
     return issues
+
 
 import subprocess
 import json
@@ -141,15 +148,15 @@ def scan_chain(modified_files):
          bandit_issues = run_bandit_scan(file_path)
          all_issues.extend(bandit_issues)
 
-    # Run Safety (only once, since it scans dependencies in requirements.txt)
-    #safety_issues = run_safety_scan()
-   # all_issues.extend(safety_issues)
+   # Run Safety (only once, since it scans dependencies in requirements.txt)
+    safety_issues = run_safety_scan()
+    all_issues.extend(safety_issues)
 
     # Run Semgrep on each file
-    for file_path in modified_files:
-         semgrep_issues = run_semgrep_scan(file_path)
-         all_issues.extend(semgrep_issues)
-
+    # for file_path in modified_files:
+    #      semgrep_issues = run_semgrep_scan(file_path)
+    #      all_issues.extend(semgrep_issues)
+    #
     return all_issues
 
 

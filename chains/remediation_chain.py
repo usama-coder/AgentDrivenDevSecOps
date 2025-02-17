@@ -17,6 +17,7 @@ You are a Python security expert. Review the following Python code for any secur
 Only include the code fixes with the format:
  Vulnerable Code:
  Recommended Fix:
+ recommended fix description:
 
 {code}
 
@@ -120,14 +121,6 @@ def run_remediation_chain(vulnerable_code):
         print("\nFiltered Code Fixes and Recommendations:")
         print(filtered_response)
 
-        # Log the input and output of the remediation chain
-        log_action(
-            agent_name="LLMRemediationAgent",
-            action="Generate Remediation",
-            input_data={"code": vulnerable_code},
-            output_data={"response": response},
-        )
-
         # Reflect on the remediation output using LLM
         reflections = reflect_with_llm(reflection_chain, filtered_response)
 
@@ -140,7 +133,7 @@ def run_remediation_chain(vulnerable_code):
         print("Reflection indicates issues with the remediation. Adjusting workflow...")
         print(f"Feedback: {reflections['feedback']}")
 
-        # Adjust the prompt for the next iteration
+
         remediation_chain.prompt.template = """
         You are a Python security expert. Review the following Python code for any vulnerabilities. 
         For each identified vulnerability, provide your response in the following format:
@@ -159,15 +152,7 @@ def run_remediation_chain(vulnerable_code):
         """
         print("Updated prompt with more specific instructions.")
 
-    # If all attempts fail, log and provide fallback
-    if not reflections["overall_success"]:
-        print("All remediation attempts failed. Proceeding with fallback workflow...")
-        log_action(
-            agent_name="LLMRemediationAgent",
-            action="Fallback",
-            input_data={"code": vulnerable_code},
-            output_data={"reason": "Incomplete remediation after retries"},
-        )
+
         filtered_response = "Remediation unsuccessful. Please review manually."
 
     return filtered_response
