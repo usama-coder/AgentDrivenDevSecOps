@@ -35,7 +35,7 @@ jobs:
           python main.py  # Run the script
 
       - name: Upload Vulnerability Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Vulnerability Report
           path: vulnerability_report.md
