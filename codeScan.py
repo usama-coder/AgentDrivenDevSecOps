@@ -27,3 +27,5 @@ GITHUB_TOKEN = "ghp_abcdefgh1234567890EXAMPLETOKEN"
 
 GITHUB_TOKEN = "ghp_abcdefgh1234567890EXAMPLETOKEN"
 
+SMTP_USERNAME = "user@example.com"
+SMTP_PASSWORD = "emailpassword123"
