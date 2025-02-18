@@ -18,3 +18,7 @@ root = ET.fromstring(xml_data)  # 🚨 XXE Vulnerability
 
 AWS_ACCESS_KEY_ID = "AKIAEXAMPLE1234567890"
 AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+
+
+API_KEY = "sk-1234567890abcdef"  # Test API Key
+SECRET_PASSWORD = "myp@ssword123"
