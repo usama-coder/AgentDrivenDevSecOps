@@ -30,9 +30,12 @@ jobs:
 
       - name: Install Gitleaks
         run: |
-          wget -qO gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
+          curl -sSL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
           tar -xzf gitleaks.tar.gz
-          sudo mv gitleaks /usr/local/bin/
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          gitleaks version  # Verify installation
+      
 
       - name: Run Security Scan Script
         env:
