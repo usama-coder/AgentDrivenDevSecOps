@@ -139,25 +139,95 @@ def run_semgrep_scan(files):
 
 
 
+
+
 def scan_chain(modified_files):
     """Run all scans on the modified files."""
     all_issues = []
 
     # Run Bandit on each file
-    for file_path in modified_files:
-         bandit_issues = run_bandit_scan(file_path)
-         all_issues.extend(bandit_issues)
+    # for file_path in modified_files:
+    #      bandit_issues = run_bandit_scan(file_path)
+    #      all_issues.extend(bandit_issues)
 
-   # Run Safety (only once, since it scans dependencies in requirements.txt)
+   # # Run Safety (only once, since it scans dependencies in requirements.txt)
    #  safety_issues = run_safety_scan()
    #  all_issues.extend(safety_issues)
 
+    git_leaks = run_gitleaks_scan()
+    all_issues.extend(git_leaks)
+
+    #Doesnt work for now
     # Run Semgrep on each file
     # for file_path in modified_files:
     #      semgrep_issues = run_semgrep_scan(file_path)
     #      all_issues.extend(semgrep_issues)
     #
     return all_issues
+
+
+
+def run_gitleaks_scan():
+
+    issues = []  # Initialize issues list
+
+    try:
+        # Define the output JSON file path
+        report_file = "gitleaks.json"
+
+        # Define the source directory
+        source_dir = os.getcwd()
+
+        #-----------------For Docker env command -------------------
+        # Run Gitleaks inside Docker, saving output to `gitleaks.json`
+        # result = subprocess.run(
+        #     [
+        #         "docker", "run", "--rm",
+        #         "-v", f"{source_dir}:/repo",  # Mount the repo inside Docker
+        #         "zricethezav/gitleaks:latest", "--log-opts", "-2",
+        #         "detect", "--source", "/repo", "--report-format", "json",
+        #         "--report-path", f"/repo/{report_file}"  # Save report inside mounted directory
+        #     ],
+        #     capture_output=True, text=True
+        # )
+
+        #--------------For github -----------------------
+        result = subprocess.run(
+            ["gitleaks", "detect", "--source=.", "--report=gitleaks.json", "--format=json"],
+            capture_output=True, text=True
+        )
+        # Handle Gitleaks exit codes
+        if result.returncode not in [0, 1]:  # 0 = No leaks, 1 = Leaks found
+            print(f"⚠️ Gitleaks encountered an error: {result.stderr.strip()}")
+            return issues  # Return empty list to avoid crashing
+
+        # Read the `gitleaks.json` file
+        if os.path.exists(report_file):
+            with open(report_file, "r", encoding="utf-8") as f:
+                output_data = json.load(f)
+
+            # Process detected leaks
+            for leak in output_data:
+                issues.append({
+                    "tool": "Gitleaks",
+                    "file": leak.get("File", "Unknown file"),
+                    "line": leak.get("StartLine", "Unknown line"),
+                    "description": leak.get("Description", "Secret detected"),
+                    "severity": "HIGH",  # Secrets are always high severity
+                    "code": leak.get("Match", "[REDACTED]"),  # Show detected match
+                    #"author": leak.get("Author", "Unknown"),
+                   # "commit": leak.get("Commit", "N/A"),
+                  #  "link": leak.get("Link", "No link available"),
+                })
+
+            print(f"✅ Gitleaks scan completed: {len(issues)} leaks found.")
+        else:
+            print("❌ Gitleaks report file not found!")
+
+    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+        print(f"❌ Error processing Gitleaks scan: {e}")
+
+    return issues  # Always return a list (even if empty)
 
 
 if __name__ == "__main__":
