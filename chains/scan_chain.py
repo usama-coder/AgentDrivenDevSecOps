@@ -149,8 +149,8 @@ def scan_chain(modified_files):
          all_issues.extend(bandit_issues)
 
    # Run Safety (only once, since it scans dependencies in requirements.txt)
-    safety_issues = run_safety_scan()
-    all_issues.extend(safety_issues)
+   #  safety_issues = run_safety_scan()
+   #  all_issues.extend(safety_issues)
 
     # Run Semgrep on each file
     # for file_path in modified_files:

@@ -11,3 +11,6 @@ pattern.match("aaaaaaaaaaaaaaaaaaaa!")
 
 
 
+import xml.etree.ElementTree as ET
+xml_data = "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]> <foo>&xxe;</foo>"
+root = ET.fromstring(xml_data)  # 🚨 XXE Vulnerability
