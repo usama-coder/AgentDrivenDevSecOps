@@ -1,5 +1,4 @@
-import sqlite3
-import requests
+
 from sqlalchemy.testing.pickleable import User
 
 
@@ -9,4 +8,6 @@ def get_user(username):
 import re
 pattern = re.compile("(a+)+")  # 🚨 Can cause Regex Denial of Service (ReDoS)
 pattern.match("aaaaaaaaaaaaaaaaaaaa!")
+
+
 
