@@ -14,3 +14,7 @@ pattern.match("aaaaaaaaaaaaaaaaaaaa!")
 import xml.etree.ElementTree as ET
 xml_data = "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]> <foo>&xxe;</foo>"
 root = ET.fromstring(xml_data)  # 🚨 XXE Vulnerability
+
+
+AWS_ACCESS_KEY_ID = "AKIAEXAMPLE1234567890"
+AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
