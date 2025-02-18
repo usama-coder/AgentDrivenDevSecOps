@@ -180,22 +180,22 @@ def run_gitleaks_scan():
 
         #-----------------For Docker env command -------------------
         # Run Gitleaks inside Docker, saving output to `gitleaks.json`
-        # result = subprocess.run(
-        #     [
-        #         "docker", "run", "--rm",
-        #         "-v", f"{source_dir}:/repo",  # Mount the repo inside Docker
-        #         "zricethezav/gitleaks:latest", "--log-opts", "-2",
-        #         "detect", "--source", "/repo", "--report-format", "json",
-        #         "--report-path", f"/repo/{report_file}"  # Save report inside mounted directory
-        #     ],
-        #     capture_output=True, text=True
-        # )
-
-        #--------------For github -----------------------
         result = subprocess.run(
-            ["gitleaks", "detect", "--source=.", "--report=gitleaks.json", "--format=json"],
+            [
+                "docker", "run", "--rm",
+                "-v", f"{source_dir}:/repo",  # Mount the repo inside Docker
+                "zricethezav/gitleaks:latest", "--log-opts", "-2",
+                "detect", "--source", "/repo", "--report-format", "json",
+                "--report-path", f"/repo/{report_file}"  # Save report inside mounted directory
+            ],
             capture_output=True, text=True
         )
+
+        #--------------For github -----------------------
+        # result = subprocess.run(
+        #     ["gitleaks", "detect", "--source=.", "--report=gitleaks.json", "--format=json"],
+        #     capture_output=True, text=True
+        # )
         # Handle Gitleaks exit codes
         if result.returncode not in [0, 1]:  # 0 = No leaks, 1 = Leaks found
             print(f"⚠️ Gitleaks encountered an error: {result.stderr.strip()}")
