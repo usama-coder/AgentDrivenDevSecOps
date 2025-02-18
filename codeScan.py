@@ -1,6 +1,8 @@
 
 from sqlalchemy.testing.pickleable import User
 
+gh_token = "ghp_abcdefgh1234567890EXAMPLETOKEN"
+
 
 def get_user(username):
     return User.objects.filter(username=f"{username}").first()  # 🚨 Vulnerable to SQL injection
