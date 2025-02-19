@@ -1,7 +1,6 @@
+import hashlib
 import subprocess
-import os
 import json
-
 
 def run_bandit_scan(file_path):
     """Run Bandit scan and return the results."""
@@ -41,13 +40,12 @@ def run_safety_scan():
     """Run Safety scan for dependencies and return the results."""
     issues = []
     try:
-        # Run Safety with JSON output
+
         result = subprocess.run(['safety', 'check', '--json'], capture_output=True, text=True)
 
         # Parse the output into a Python object
         output_data = json.loads(result.stdout)
 
-        # Safety outputs a **list** of vulnerabilities, so we need to iterate over it
         if isinstance(output_data, list):  # Ensure it's a list before iterating
             for vuln in output_data:
                 if isinstance(vuln, list) and len(vuln) > 1:  # Ensure the structure is valid
@@ -77,17 +75,8 @@ def run_safety_scan():
     return issues
 
 
-import subprocess
-import json
-
-import subprocess
-import json
-
 def run_semgrep_scan(files):
-    """
-    Run Semgrep scan on the given files and return the results.
-    Uses print statements for step-by-step visibility.
-    """
+
     issues = []
     for file_path in files:
         try:
@@ -142,20 +131,20 @@ def run_semgrep_scan(files):
 
 
 def scan_chain(modified_files):
-    """Run all scans on the modified files."""
-    all_issues = []
 
-    # Run Bandit on each file
-    # for file_path in modified_files:
-    #      bandit_issues = run_bandit_scan(file_path)
-    #      all_issues.extend(bandit_issues)
+    all_issues_bandit = []
+    all_issues_secrets = []
 
-   # # Run Safety (only once, since it scans dependencies in requirements.txt)
-   #  safety_issues = run_safety_scan()
-   #  all_issues.extend(safety_issues)
+    for file_path in modified_files:
+         bandit_issues = run_bandit_scan(file_path)
+         all_issues_bandit.extend(bandit_issues)
+         secrets = run_detect_secrets_scan(file_path)
+         all_issues_secrets.extend(secrets)
+    all_issues=filter_common_issues(all_issues_bandit,all_issues_secrets)
 
-    git_leaks = run_gitleaks_scan()
-    all_issues.extend(git_leaks)
+    # Run Safety (only once, since it scans dependencies in requirements.txt)
+    safety_issues = run_safety_scan()
+    all_issues.extend(safety_issues)
 
     #Doesnt work for now
     # Run Semgrep on each file
@@ -165,70 +154,47 @@ def scan_chain(modified_files):
     #
     return all_issues
 
-
-
-def run_gitleaks_scan():
-
-    issues = []  # Initialize issues list
+def run_detect_secrets_scan(file_path):
 
     try:
-        # Define the output JSON file path
-        report_file = "gitleaks.json"
 
-        # Define the source directory
-        source_dir = os.getcwd()
+        result = subprocess.run(["detect-secrets", "scan", file_path], capture_output=True, text=True)
+        output_data = json.loads(result.stdout)
 
-        #-----------------For Docker env command -------------------
-        # Run Gitleaks inside Docker, saving output to `gitleaks.json`
-        result = subprocess.run(
-            [
-                "docker", "run", "--rm",
-                "-v", f"{source_dir}:/repo",  # Mount the repo inside Docker
-                "zricethezav/gitleaks:latest", "--log-opts", "-2",
-                "detect", "--source", "/repo", "--report-format", "json",
-                "--report-path", f"/repo/{report_file}"  # Save report inside mounted directory
-            ],
-            capture_output=True, text=True
-        )
-
-        #--------------For github -----------------------
-        # result = subprocess.run(
-        #     ["gitleaks", "detect", "--source=.", "--report=gitleaks.json", "--format=json"],
-        #     capture_output=True, text=True
-        # )
-        # Handle Gitleaks exit codes
-        if result.returncode not in [0, 1]:  # 0 = No leaks, 1 = Leaks found
-            print(f"⚠️ Gitleaks encountered an error: {result.stderr.strip()}")
-            return issues  # Return empty list to avoid crashing
-
-        # Read the `gitleaks.json` file
-        if os.path.exists(report_file):
-            with open(report_file, "r", encoding="utf-8") as f:
-                output_data = json.load(f)
-
-            # Process detected leaks
-            for leak in output_data:
+        issues = []
+        for file, secrets in output_data.get("results", {}).items():
+            for secret in secrets:
                 issues.append({
-                    "tool": "Gitleaks",
-                    "file": leak.get("File", "Unknown file"),
-                    "line": leak.get("StartLine", "Unknown line"),
-                    "description": leak.get("Description", "Secret detected"),
-                    "severity": "HIGH",  # Secrets are always high severity
-                    "code": leak.get("Match", "[REDACTED]"),  # Show detected match
-                    #"author": leak.get("Author", "Unknown"),
-                   # "commit": leak.get("Commit", "N/A"),
-                  #  "link": leak.get("Link", "No link available"),
+                    "tool": "detect-secrets",
+                    "file": file,
+                    "line": secret.get("line_number", "Unknown"),
+                    "description": f"Possible secret detected ({secret.get('type', 'Unknown')})",
+                    "severity": "HIGH",
+                    "code": secret.get("hashed_secret", "Hidden"),
                 })
+        return issues
 
-            print(f"✅ Gitleaks scan completed: {len(issues)} leaks found.")
-        else:
-            print("❌ Gitleaks report file not found!")
+    except Exception as e:
+        print(f"Error running detect-secrets: {e}")
+        return []
 
-    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-        print(f"❌ Error processing Gitleaks scan: {e}")
 
-    return issues  # Always return a list (even if empty)
+def generate_issue_hash(issue):
 
+    unique_string = f"{issue['file']}:{issue['line']}"
+    return hashlib.sha256(unique_string.encode()).hexdigest()
+
+
+def filter_common_issues(bandit_issues, detect_secrets_issues):
+
+    bandit_hashes = {generate_issue_hash(issue) for issue in bandit_issues}
+    filtered_issues = [
+        issue for issue in detect_secrets_issues if generate_issue_hash(issue) not in bandit_hashes
+    ]
+    # Merge Bandit's unique issues and filtered detect-secrets issues
+    final_issues = bandit_issues + filtered_issues
+    print(f" Filtered out {len(detect_secrets_issues) - len(filtered_issues)} common issues.")
+    return final_issues
 
 if __name__ == "__main__":
     modified_files = ["codeScan.py"]
