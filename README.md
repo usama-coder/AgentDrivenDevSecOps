@@ -13,4 +13,5 @@ This tool identifies vulnerabilities in Python code and provides actionable reme
 - **Supports Multiple Issues**: Handles multiple vulnerabilities in a single run.
 - **Reflection**: Evaluates the quality of the output and adapts dynamically.
 
-
+## 🚀 Security Dashboard
+View the live dashboard here: [🔗https://devsecopsgit-79db8gxdtnxtgf4faurudv.streamlit.app/]
