@@ -17,6 +17,4 @@ query = "SELECT * FROM users WHERE username = '" + username + "';"  # ❌ Vulner
 cursor.execute(query)
 
 
-filename = input("Enter filename: ")
-with open(filename, "r") as file:
-    print(file.read())  # ❌ Vulnerable: Arbitrary file read
+
