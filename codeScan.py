@@ -15,3 +15,8 @@ cursor = conn.cursor()
 username = input("Enter username: ")
 query = "SELECT * FROM users WHERE username = '" + username + "';"  # ❌ Vulnerable: SQL Injection
 cursor.execute(query)
+
+
+filename = input("Enter filename: ")
+with open(filename, "r") as file:
+    print(file.read())  # ❌ Vulnerable: Arbitrary file read
