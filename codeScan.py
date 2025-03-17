@@ -1,12 +1,3 @@
-
-from sqlalchemy.testing.pickleable import User
-
-import os
-
-user_input = input("Enter a filename: ")
-os.system("rm -rf " + user_input)  # ❌ Vulnerable: Command injection
-
-
 import sqlite3
 
 conn = sqlite3.connect('database.db')
