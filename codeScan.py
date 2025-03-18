@@ -9,7 +9,7 @@ def sqlQuery():
     cursor.execute(query)
 
 def connect_database():
-    password = "SuperSecret123"
+    password = "SuperSecret12as3"
 
 def create_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
