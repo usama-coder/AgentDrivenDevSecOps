@@ -138,16 +138,13 @@ def scan_chain(modified_files):
     for file_path in modified_files:
          bandit_issues = run_bandit_scan(file_path)
          all_issues_bandit.extend(bandit_issues)
-
-
-    return all_issues_bandit
-         # secrets = run_detect_secrets_scan(file_path)
-         # all_issues_secrets.extend(secrets)
-    # all_issues=filter_common_issues(all_issues_bandit,all_issues_secrets)
+         secrets = run_detect_secrets_scan(file_path)
+         all_issues_secrets.extend(secrets)
+    all_issues=filter_common_issues(all_issues_bandit,all_issues_secrets)
 
     # Run Safety (only once, since it scans dependencies in requirements.txt)
-    # safety_issues = run_safety_scan()
-    # all_issues.extend(safety_issues)
+    safety_issues = run_safety_scan()
+    all_issues.extend(safety_issues)
 
     #Doesnt work for now
     # Run Semgrep on each file
@@ -156,7 +153,7 @@ def scan_chain(modified_files):
     #      all_issues.extend(semgrep_issues)
     #\
 
-    # return all_issues
+    return all_issues
 
 
 def run_detect_secrets_scan(file_path):
