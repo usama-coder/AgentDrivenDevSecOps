@@ -21,11 +21,6 @@ def hash_password(password):
     """This function uses MD5, which is considered a weak hashing algorithm."""
     return hashlib.md5(password.encode()).hexdigest()
 
-import random
-
-def generate_otp():
-    """This function generates an OTP using an insecure random number generator."""
-    return random.randint(100000, 999999)
 
 import tempfile
 
