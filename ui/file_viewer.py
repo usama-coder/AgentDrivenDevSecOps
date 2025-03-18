@@ -1,6 +1,8 @@
 import re
 import streamlit as st
 import ast
+import requests
+import base64
 
 from chains.remediation_chain import (
     extract_function_from_file,
@@ -35,7 +37,7 @@ def apply_fix(issue):
 
         # Overwrite the file with the LLM-fixed function
         # overwrite_function_in_file(file_name, extracted_function, fixed_function)
-        update_github_file(file_name, fixed_function)
+        update_github_file(file_name, fixed_function,extracted_function)
 
         st.success(f"✅ LLM Applied Fix to {file_name} at Line {line_number}!")
     else:
@@ -81,12 +83,7 @@ def is_valid_python_code(code):
         return False
 
 
-import requests
-import base64
-import streamlit as st
-
-
-def update_github_file(file_path, fixed_code):
+def update_github_file(file_path, fixed_function,original_function):
     """Update a file in a GitHub repository after applying the fix."""
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
     REPO_OWNER = st.secrets["REPO_OWNER"]
@@ -98,15 +95,21 @@ def update_github_file(file_path, fixed_code):
 
     # Get current file content
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    # Get current file content
     response = requests.get(file_url, headers=headers)
 
     if response.status_code == 200:
         file_data = response.json()
         sha = file_data["sha"]  # Required for updating the file
         current_content = base64.b64decode(file_data["content"]).decode("utf-8")
-
-        # Replace the vulnerable code with the fixed version
-        updated_content = fixed_code
+        fixed_function=clean_fix(fixed_function)
+        # Replace only the vulnerable function, keeping the rest of the file unchanged
+        if original_function in current_content:
+            updated_content = current_content.replace(original_function, fixed_function)
+        else:
+            st.error(f"⚠️ Could not find the function in {file_path}. No changes made.")
+            return
 
         # Prepare the request payload
         payload = {
@@ -123,7 +126,13 @@ def update_github_file(file_path, fixed_code):
             st.success(f"✅ Fix successfully applied and pushed to GitHub: {file_path}")
         else:
             st.error(f"❌ Failed to update {file_path} on GitHub! Error: {update_response.text}")
+
     else:
         st.error(f"❌ Could not fetch {file_path} from GitHub. Error: {response.text}")
 
 
+def clean_fix(recommended_fix):
+
+    cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
+    cleaned_fix = cleaned_fix.strip()
+    return cleaned_fix.strip()
