@@ -6,10 +6,8 @@ def sqlQuery():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     username = input("Enter username: ")
-    ```python
-    query = "SELECT * FROM users WHERE username = %s AND password = %s"
-    cursor.execute(query, (username, password))
-```
+    query = "SELECT * FROM users WHERE username = '" + username + "';"  # ❌ Vulnerable: SQL Injection
+    cursor.execute(query)
 
 
 def connect_database():
