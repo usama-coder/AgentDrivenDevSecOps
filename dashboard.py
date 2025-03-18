@@ -8,7 +8,7 @@ from ui.report_loader import load_vulnerabilities
 st.set_page_config(page_title="Vulnerability Dashboard", layout="wide")
 # Load vulnerability data from report
 vulnerabilities = load_vulnerabilities()
-
+# render_file_viewer(vulnerabilities)
 # Sidebar for Navigation
 selected_page = render_sidebar()
 

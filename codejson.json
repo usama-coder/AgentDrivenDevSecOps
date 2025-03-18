@@ -4,10 +4,5 @@
   "GITHUB_TOKENS": [
     "ghp_abcdefgh1234567890EXAMPLETOKEN",
     "ghp_abcdefgh1234567890EXAMPLETOKEN"
-  ],
-
-  "SMTP_CREDENTIALS": {
-    "SMTP_USERNAME": "user@example.com",
-    "SMTP_PASSWORD": "emailpassword123"
-  }
+  ]
 }

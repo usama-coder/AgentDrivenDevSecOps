@@ -135,7 +135,7 @@ def run_remediation_chain(vulnerable_code):
 
 
         remediation_chain.prompt.template = """
-        You are a Python security expert. Review the following Python code for any vulnerabilities. 
+        You are a Python security expert.Donot change any variable names, also return the response with the same variable name and keep the original letter casing. Review the following Python code for any vulnerabilities. 
         For each identified vulnerability, provide your response in the following format:
 
         Vulnerable Code:
@@ -156,3 +156,88 @@ def run_remediation_chain(vulnerable_code):
         filtered_response = "Remediation unsuccessful. Please review manually."
 
     return filtered_response
+
+
+import re
+
+
+def extract_function_from_file(file_path, line_number):
+    """Extract the function that contains the specified line number."""
+    print(f"/nextracting func from file:{file_path} and line {line_number} ")
+    with open(file_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    start_idx, end_idx = None, None
+
+    # Find function start
+    for i in range(line_number - 1, -1, -1):
+        if lines[i].strip().startswith("def "):
+            start_idx = i
+            break
+
+    # Find function end (next function, class, or EOF)
+    for i in range(line_number, len(lines)):
+        if lines[i].strip().startswith(("def ", "class ")):
+            end_idx = i
+            break
+
+    if start_idx is None:
+        print("⚠️ Could not locate function start.")
+        return None
+
+    if end_idx is None:
+        end_idx = len(lines)
+
+    return lines[start_idx:end_idx]
+
+def llm_replace_vulnerability(function_code, vulnerability, recommended_fix):
+
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
+
+    prompt = PromptTemplate(template="""
+    You are a security expert. Your task is to **fix the vulnerability** in the following Python function.
+
+    **Vulnerability:** {vulnerability}
+
+    **Recommended Fix:** {recommended_fix}
+
+    **Original Function:**
+    ```python
+    {function_code}
+    ```
+
+    **Instructions:**
+    - Identify the vulnerable line and **replace it** with the recommended fix .
+    - Keep the **original function structure** and indentation unchanged.
+    - Do not introduce unnecessary changes.
+
+
+    Return **only** the corrected function code:
+    """, input_variables=["function_code", "vulnerability", "recommended_fix"])
+
+    fixing_chain = LLMChain(prompt=prompt, llm=llm)
+
+    return fixing_chain.run({
+        "function_code": "".join(function_code),
+        "vulnerability": vulnerability,
+        "recommended_fix": recommended_fix
+    })
+
+def overwrite_function_in_file(file_path, old_function, new_function):
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        file_content = f.read()
+
+    old_func_str = "".join(old_function).strip()
+    new_func_str = clean_fix(new_function.strip())
+    updated_content = file_content.replace(old_func_str, new_func_str)
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(updated_content)
+
+    print("✅ Code Fix Applied Successfully!")
+def clean_fix(recommended_fix):
+
+    cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
+    cleaned_fix = cleaned_fix.strip()
+    return cleaned_fix.strip()

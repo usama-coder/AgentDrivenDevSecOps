@@ -6,7 +6,7 @@ def run_bandit_scan(file_path):
     """Run Bandit scan and return the results."""
     issues = []
     try:
-        result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
+        result = subprocess.run(['bandit', '-f', 'json','-s','B404,B603,B607', file_path], capture_output=True, text=True)
         output_data = json.loads(result.stdout)
 
         # Process each issue from Bandit's output
@@ -138,21 +138,26 @@ def scan_chain(modified_files):
     for file_path in modified_files:
          bandit_issues = run_bandit_scan(file_path)
          all_issues_bandit.extend(bandit_issues)
-         secrets = run_detect_secrets_scan(file_path)
-         all_issues_secrets.extend(secrets)
-    all_issues=filter_common_issues(all_issues_bandit,all_issues_secrets)
+
+
+    return all_issues_bandit
+         # secrets = run_detect_secrets_scan(file_path)
+         # all_issues_secrets.extend(secrets)
+    # all_issues=filter_common_issues(all_issues_bandit,all_issues_secrets)
 
     # Run Safety (only once, since it scans dependencies in requirements.txt)
-    safety_issues = run_safety_scan()
-    all_issues.extend(safety_issues)
+    # safety_issues = run_safety_scan()
+    # all_issues.extend(safety_issues)
 
     #Doesnt work for now
     # Run Semgrep on each file
     # for file_path in modified_files:
     #      semgrep_issues = run_semgrep_scan(file_path)
     #      all_issues.extend(semgrep_issues)
-    #
-    return all_issues
+    #\
+
+    # return all_issues
+
 
 def run_detect_secrets_scan(file_path):
 
