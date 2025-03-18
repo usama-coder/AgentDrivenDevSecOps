@@ -67,6 +67,8 @@ def render_file_viewer(vulnerabilities):
                 if file_name.endswith(".py") and issue["recommended_fix"] != "No recommended fix provided.":
                     st.markdown("#### ✅ Recommended Fix:")
                     st.code(issue["recommended_fix"], language="python")
+                    st.markdown("#### ✅ Recommended Fix Description:")
+                    st.markdown(issue["description"])
 
                     # Add Fix Code button with a unique key
                     if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{file_name}_{issue['line']}"):
