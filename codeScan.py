@@ -6,8 +6,10 @@ def sqlQuery():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     username = input("Enter username: ")
-    query = "SELECT * FROM users WHERE username = '" + username + "';"  # ❌ Vulnerable: SQL Injection
-    cursor.execute(query)
+    ```python
+    query = "SELECT * FROM users WHERE username = %s AND password = %s"
+    cursor.execute(query, (username, password))
+```
 
 def append_to_list(value, list_var=[]):
     list_var.append(value)
