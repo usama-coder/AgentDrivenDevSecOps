@@ -5,7 +5,6 @@ import streamlit as st
 import re
 
 def fetch_latest_report():
-    """Fetch and extract the latest vulnerability report from GitHub Actions artifacts."""
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
     REPO_OWNER =st.secrets["REPO_OWNER"]
     REPO_NAME = st.secrets["REPO_NAME"]
@@ -28,7 +27,7 @@ def fetch_latest_report():
         st.error("⚠️ No recent vulnerability reports found.")
         return None
 
-    # Download the artifact (it's a zip file)
+    # Download the artifact
     download_url = latest_artifact["archive_download_url"]
     response = requests.get(download_url, headers=headers, stream=True)
 
@@ -45,8 +44,7 @@ def fetch_latest_report():
 
 
 def load_vulnerabilities():
-    """Fetch latest report from GitHub and parse vulnerabilities from it."""
-    content = fetch_latest_report()  # Get report content directly from artifacts
+    content = fetch_latest_report()
     if not content:
         return []
 

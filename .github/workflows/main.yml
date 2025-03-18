@@ -31,6 +31,8 @@ jobs:
       - name: Run Security Scan Script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
           python main.py  
 
