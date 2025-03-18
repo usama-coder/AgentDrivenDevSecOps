@@ -83,8 +83,8 @@ def is_valid_python_code(code):
         return False
 
 
-def update_github_file(file_path, fixed_function,original_function):
-    """Update a file in a GitHub repository after applying the fix."""
+def update_github_file(file_path, fixed_function, original_function):
+    """Update a file in a GitHub repository while preserving other code."""
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
     REPO_OWNER = st.secrets["REPO_OWNER"]
     REPO_NAME = st.secrets["REPO_NAME"]
@@ -92,8 +92,6 @@ def update_github_file(file_path, fixed_function,original_function):
 
     # GitHub API URL for the file
     file_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
-
-    # Get current file content
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
 
     # Get current file content
@@ -103,8 +101,11 @@ def update_github_file(file_path, fixed_function,original_function):
         file_data = response.json()
         sha = file_data["sha"]  # Required for updating the file
         current_content = base64.b64decode(file_data["content"]).decode("utf-8")
-        fixed_function=clean_fix(fixed_function)
-        # Replace only the vulnerable function, keeping the rest of the file unchanged
+        fixed_function= clean_fix(fixed_function)
+        # Ensure original_function is a string before checking its presence
+        if isinstance(original_function, list):
+            original_function = "\n".join(original_function)
+
         if original_function in current_content:
             updated_content = current_content.replace(original_function, fixed_function)
         else:

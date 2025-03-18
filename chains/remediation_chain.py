@@ -162,33 +162,32 @@ import re
 
 
 def extract_function_from_file(file_path, line_number):
-    """Extract the function that contains the specified line number."""
-    print(f"/nextracting func from file:{file_path} and line {line_number} ")
-    with open(file_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
+    """Extracts the function from a file that contains the given line number."""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
 
-    start_idx, end_idx = None, None
+        function_lines = []
+        inside_function = False
 
-    # Find function start
-    for i in range(line_number - 1, -1, -1):
-        if lines[i].strip().startswith("def "):
-            start_idx = i
-            break
+        for i, line in enumerate(lines):
+            if i + 1 == line_number:
+                inside_function = True  # Start extracting function
 
-    # Find function end (next function, class, or EOF)
-    for i in range(line_number, len(lines)):
-        if lines[i].strip().startswith(("def ", "class ")):
-            end_idx = i
-            break
+            if inside_function:
+                function_lines.append(line)
 
-    if start_idx is None:
-        print("⚠️ Could not locate function start.")
+                # Stop when an empty new line is found (indicating end of function)
+                if line.strip() == "":
+                    break
+
+        # Ensure the extracted function is a string
+        return "".join(function_lines).strip()
+
+    except FileNotFoundError:
+        print(f"❌ Error: File '{file_path}' not found.")
         return None
 
-    if end_idx is None:
-        end_idx = len(lines)
-
-    return lines[start_idx:end_idx]
 
 def llm_replace_vulnerability(function_code, vulnerability, recommended_fix):
 

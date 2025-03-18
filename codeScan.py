@@ -9,9 +9,6 @@ def sqlQuery():
     query = "SELECT * FROM users WHERE username = '" + username + "';"  # ❌ Vulnerable: SQL Injection
     cursor.execute(query)
 
-def append_to_list(value, list_var=[]):
-    list_var.append(value)
-    return list_var
 
 def connect_database():
     password = "SuperSecret123"
