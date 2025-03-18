@@ -7,9 +7,9 @@ import re
 def fetch_latest_report():
     """Fetch and extract the latest vulnerability report from GitHub Actions artifacts."""
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-    REPO_OWNER = "usamacgi"  # Change this
-    REPO_NAME = "DevSecOps"  # Change this
-    ARTIFACT_NAME = "Vulnerability Report"
+    REPO_OWNER =st.secrets["REPO_OWNER"]
+    REPO_NAME = st.secrets["REPO_NAME"]
+    ARTIFACT_NAME =  st.secrets["ARTIFACT_NAME"]
 
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
 

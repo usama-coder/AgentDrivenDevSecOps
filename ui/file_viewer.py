@@ -1,6 +1,7 @@
 import re
 import streamlit as st
-import hashlib
+import ast
+
 from chains.remediation_chain import (
     extract_function_from_file,
     llm_replace_vulnerability,
@@ -11,6 +12,7 @@ def clean_recommended_fix(recommended_fix):
     cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
     cleaned_fix = cleaned_fix.strip()
     return cleaned_fix.strip()
+
 def apply_fix(issue):
     """Extract function, replace vulnerability using LLM, and apply changes."""
     file_name = issue["file"]
@@ -32,7 +34,8 @@ def apply_fix(issue):
         )
 
         # Overwrite the file with the LLM-fixed function
-        overwrite_function_in_file(file_name, extracted_function, fixed_function)
+        # overwrite_function_in_file(file_name, extracted_function, fixed_function)
+        update_github_file(file_name, fixed_function)
 
         st.success(f"✅ LLM Applied Fix to {file_name} at Line {line_number}!")
     else:
@@ -69,18 +72,57 @@ def render_file_viewer(vulnerabilities):
 
                 st.divider()
 
-    # Display file names
-
-
-import ast
 
 def is_valid_python_code(code):
-    """
-    Check if a given string is valid Python code.
-    Returns True if valid, False otherwise.
-    """
     try:
-        ast.parse(code)  # Try parsing the code
+        ast.parse(code)
         return True
     except SyntaxError:
         return False
+
+
+import requests
+import base64
+import streamlit as st
+
+
+def update_github_file(file_path, fixed_code):
+    """Update a file in a GitHub repository after applying the fix."""
+    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+    GITHUB_REPO = st.secrets["GITHUB_REPO"]
+    GITHUB_BRANCH = st.secrets["GITHUB_BRANCH"]
+
+    # GitHub API URL for the file
+    file_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
+
+    # Get current file content
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    response = requests.get(file_url, headers=headers)
+
+    if response.status_code == 200:
+        file_data = response.json()
+        sha = file_data["sha"]  # Required for updating the file
+        current_content = base64.b64decode(file_data["content"]).decode("utf-8")
+
+        # Replace the vulnerable code with the fixed version
+        updated_content = fixed_code
+
+        # Prepare the request payload
+        payload = {
+            "message": f"🚀 Auto-fix applied to {file_path}",
+            "content": base64.b64encode(updated_content.encode()).decode("utf-8"),
+            "sha": sha,
+            "branch": GITHUB_BRANCH
+        }
+
+        # Send request to update file
+        update_response = requests.put(file_url, headers=headers, json=payload)
+
+        if update_response.status_code == 200:
+            st.success(f"✅ Fix successfully applied and pushed to GitHub: {file_path}")
+        else:
+            st.error(f"❌ Failed to update {file_path} on GitHub! Error: {update_response.text}")
+    else:
+        st.error(f"❌ Could not fetch {file_path} from GitHub. Error: {response.text}")
+
+
