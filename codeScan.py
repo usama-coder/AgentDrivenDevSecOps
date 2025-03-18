@@ -17,8 +17,6 @@ def create_server():
     server_socket.listen(5)
     return server_socket
 
-
-
 def hash_password(password):
     """This function uses MD5, which is considered a weak hashing algorithm."""
     return hashlib.md5(password.encode()).hexdigest()
