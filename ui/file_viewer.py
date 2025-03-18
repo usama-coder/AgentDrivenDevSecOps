@@ -89,11 +89,12 @@ import streamlit as st
 def update_github_file(file_path, fixed_code):
     """Update a file in a GitHub repository after applying the fix."""
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-    GITHUB_REPO = st.secrets["GITHUB_REPO"]
+    REPO_OWNER = st.secrets["REPO_OWNER"]
+    REPO_NAME = st.secrets["REPO_NAME"]
     GITHUB_BRANCH = st.secrets["GITHUB_BRANCH"]
 
     # GitHub API URL for the file
-    file_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
+    file_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
 
     # Get current file content
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
