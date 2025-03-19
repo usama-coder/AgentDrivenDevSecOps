@@ -39,7 +39,6 @@ if pr_reports:
     if selected_pr_number != st.session_state["selected_pr"]:
         st.session_state["selected_pr"] = selected_pr_number
 
-    # Load vulnerabilities for selected PR
     vulnerabilities = load_vulnerabilities()
 
     # Sidebar Navigation
