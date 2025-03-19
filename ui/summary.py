@@ -5,10 +5,10 @@ def load_summary_css():
     with open("ui/styles/summary.css", "r") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-def display_summary():
+def display_summary(vulnerabilities):
 
     load_summary_css()
-    vulnerabilities = load_vulnerabilities()
+    # vulnerabilities = load_vulnerabilities()
     total_vulnerabilities = len(vulnerabilities)
     severity_counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0}
 
