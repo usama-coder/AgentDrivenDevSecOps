@@ -22,14 +22,14 @@ if "selected_pr" not in st.session_state:
 # Prepare PR dropdown options with dynamic target branch
 if pr_reports:
     pr_options = {
-        f"{data['branch']} ⟶ {data['target_branch']}": pr_number  # ✅ Dynamically show source -> target
+        f"{data['branch']} ⟶ {data['target_branch']}": pr_number
         for pr_number, data in pr_reports.items()
     }
 
-    # Auto-select latest PR on first run
     if st.session_state["selected_pr"] is None:
-        latest_pr_number = max(pr_options.values())  # Get the latest PR number
+        latest_pr_number = max(pr_options.values())
         st.session_state["selected_pr"] = latest_pr_number
+        st.session_state["selected_pr_branch"] = pr_reports[latest_pr_number]["branch"]
 
     # Dropdown for PR selection
     selected_pr_label = st.sidebar.selectbox("Choose a PR", options=pr_options.keys())
