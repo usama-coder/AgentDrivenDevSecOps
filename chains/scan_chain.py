@@ -6,7 +6,11 @@ def run_bandit_scan(file_path):
 
     issues = []
     try:
-        result = subprocess.run(['bandit', '-f', 'json', file_path], capture_output=True, text=True)
+        result = subprocess.run(
+            ['bandit', '-f', 'json', '-s', 'B404,B603,B606', file_path],
+            capture_output=True,
+            text=True
+        )
         output_data = json.loads(result.stdout)
 
         if output_data.get("results"):
