@@ -67,7 +67,7 @@ def render_file_viewer(vulnerabilities):
                     st.markdown("#### ✅ Recommended Fix Description:")
                     st.markdown(issue["description"])
                     # 🔹 Ensure the button key is unique using a hash
-                    unique_id = hashlib.md5(f"{file_name}_{issue['line']}_{index}".encode()).hexdigest()
+                    unique_id = hashlib.sha256(f"{file_name}_{issue['line']}_{index}".encode()).hexdigest()
                     if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{unique_id}"):
                         apply_fix(issue)
 
