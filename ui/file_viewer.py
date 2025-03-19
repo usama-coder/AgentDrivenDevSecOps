@@ -3,6 +3,7 @@ import streamlit as st
 import ast
 import requests
 import base64
+import hashlib
 
 from chains.remediation_chain import (
     extract_function_from_file,
@@ -14,24 +15,32 @@ def clean_recommended_fix(recommended_fix):
     cleaned_fix = cleaned_fix.strip()
     return cleaned_fix.strip()
 
+
 def apply_fix(issue):
     file_name = issue["file"]
     line_number = issue["line"]
     recommended_fix = clean_recommended_fix(issue["recommended_fix"])
+
+    if "selected_pr_branch" not in st.session_state or not st.session_state["selected_pr_branch"]:
+        st.error("❌ No source branch selected! Please select a PR before applying fixes.")
+        return
+
     extracted_function = extract_function_from_file(file_name, line_number)
+
     if not is_valid_python_code(recommended_fix):
         st.warning(
             f"⚠️ The recommended fix for `{file_name}` at line `{line_number}` is not a direct code replacement.")
         st.markdown("### Suggested Manual Fix:")
         st.info(issue["recommended_fix"])
         return
+
     if extracted_function:
         fixed_function = llm_replace_vulnerability(
-            extracted_function, issue["vulnerable_code"],recommended_fix
-        )
-        update_github_file(file_name, fixed_function,extracted_function)
+            extracted_function, issue["vulnerable_code"], recommended_fix        )
 
-        st.success(f"✅ LLM Applied Fix to {file_name} at Line {line_number}!")
+        update_github_file(file_name, fixed_function, extracted_function)
+        st.success(
+            f"✅ LLM Applied Fix to {file_name} at Line {line_number} (Branch: {st.session_state['selected_pr_branch']})!")
     else:
         st.error("⚠️ Could not find the function to fix.")
 
@@ -47,7 +56,7 @@ def render_file_viewer(vulnerabilities):
 
     for file_name, issues in file_vulnerabilities.items():
         with st.expander(f"📄 {file_name} ({len(issues)} issues)"):
-            for issue in issues:
+            for index, issue in enumerate(issues):
                 st.markdown(f"### 🔹 {issue['description']}")
                 st.markdown(f"**Severity:** {issue['severity']}")
                 st.code(issue["vulnerable_code"], language="python")
@@ -57,8 +66,9 @@ def render_file_viewer(vulnerabilities):
                     st.code(issue["recommended_fix"], language="python")
                     st.markdown("#### ✅ Recommended Fix Description:")
                     st.markdown(issue["description"])
-
-                    if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{file_name}_{issue['line']}"):
+                    # 🔹 Ensure the button key is unique using a hash
+                    unique_id = hashlib.md5(f"{file_name}_{issue['line']}_{index}".encode()).hexdigest()
+                    if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{unique_id}"):
                         apply_fix(issue)
 
                 st.divider()
@@ -76,16 +86,21 @@ def update_github_file(file_path, fixed_function, original_function):
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
     REPO_OWNER = st.secrets["REPO_OWNER"]
     REPO_NAME = st.secrets["REPO_NAME"]
-    GITHUB_BRANCH = st.secrets["GITHUB_BRANCH"]
+
+    if "selected_pr_branch" not in st.session_state or not st.session_state["selected_pr_branch"]:
+        st.error("❌ No source branch found for this PR!")
+        return
+
+    GITHUB_BRANCH = st.session_state["selected_pr_branch"]  # Dynamically set the branch
 
     file_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
 
-    response = requests.get(file_url, headers=headers)
+    response = requests.get(file_url, headers=headers, params={"ref": GITHUB_BRANCH})
 
     if response.status_code == 200:
         file_data = response.json()
-        sha = file_data["sha"]  # Required for updating the file
+        sha = file_data["sha"]
         current_content = base64.b64decode(file_data["content"]).decode("utf-8")
         fixed_function= clean_fix(fixed_function)
 

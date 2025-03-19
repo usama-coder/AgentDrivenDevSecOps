@@ -42,9 +42,21 @@ def fetch_latest_report():
     st.error("❌ Failed to extract vulnerability report from artifact.")
     return None
 
-
 def load_vulnerabilities():
-    content = fetch_latest_report()
+
+    if "selected_pr" in st.session_state and st.session_state["selected_pr"]:
+        pr_reports = fetch_reports_for_all_prs()
+        selected_pr_number = st.session_state["selected_pr"]
+
+        if selected_pr_number in pr_reports:
+            content = download_report(pr_reports[selected_pr_number]["archive_download_url"])
+        else:
+            st.error("❌ Selected PR report not found.")
+            return []
+    else:
+        # Load the latest report when no PR is selected (first run)
+        content = fetch_latest_report()
+
     if not content:
         return []
 
@@ -89,3 +101,64 @@ def load_vulnerabilities():
 
     print(f"✅ Extracted {len(vulnerabilities)} vulnerabilities successfully!")
     return vulnerabilities
+
+def fetch_reports_for_all_prs():
+
+    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+    REPO_OWNER = st.secrets["REPO_OWNER"]
+    REPO_NAME = st.secrets["REPO_NAME"]
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    # Step 1: Fetch Open PRs
+    prs_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/pulls?state=open"
+    prs_response = requests.get(prs_url, headers=headers)
+    if prs_response.status_code != 200:
+        st.error("❌ Failed to fetch open pull requests.")
+        return {}
+
+    prs = prs_response.json()
+
+    # Step 2: Fetch Artifacts
+    artifacts_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/actions/artifacts"
+    artifacts_response = requests.get(artifacts_url, headers=headers)
+    if artifacts_response.status_code != 200:
+        st.error("❌ Failed to fetch artifacts.")
+        return {}
+
+    artifacts = artifacts_response.json().get("artifacts", [])
+    pr_reports = {}
+
+    # Step 3: Map PRs to their reports
+    for pr in prs:
+        pr_number = pr["number"]
+        source_branch = pr["head"]["ref"]  # Source branch (feature/bugfix)
+        target_branch = pr["base"]["ref"]  # Target branch (main/develop)
+
+        artifact_name = f"Vulnerability Report-pr-{pr_number}"
+        artifact = next((a for a in artifacts if a["name"] == artifact_name), None)
+
+        if artifact:
+            pr_reports[pr_number] = {
+                "title": pr["title"],
+                "branch": source_branch,
+                "target_branch": target_branch,  # ✅ Dynamically fetch target branch
+                "archive_download_url": artifact["archive_download_url"]
+            }
+
+    return pr_reports
+
+def download_report(download_url):
+    """Download and extract the vulnerability report from an artifact."""
+    GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    response = requests.get(download_url, headers=headers, stream=True)
+    if response.status_code == 200:
+        with zipfile.ZipFile(io.BytesIO(response.content), "r") as zip_ref:
+            for file in zip_ref.namelist():
+                if file.endswith("vulnerability_report.md"):  # Ensure correct file is extracted
+                    with zip_ref.open(file) as report_file:
+                        return report_file.read().decode("utf-8")
+
+    st.error("❌ Failed to extract vulnerability report from artifact.")
+    return None
