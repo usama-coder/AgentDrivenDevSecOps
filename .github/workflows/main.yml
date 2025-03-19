@@ -38,5 +38,5 @@ jobs:
       - name: Upload Vulnerability Report
         uses: actions/upload-artifact@v4
         with:
-          name: Vulnerability Report
+          name: Vulnerability Report-pr-${{ github.event.pull_request.number }}
           path: vulnerability_report.md
