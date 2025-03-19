@@ -165,7 +165,7 @@ def fetch_reports_for_all_prs():
         st.error("❌ Failed to fetch open pull requests.")
         return {}
 
-    prs = prs_response.json()  # Convert response to a proper Python list
+    prs = prs_response.json()
 
     # Step 2: Fetch Artifacts
     artifacts_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/actions/artifacts"
@@ -180,17 +180,22 @@ def fetch_reports_for_all_prs():
     # Step 3: Map PRs to their reports
     for pr in prs:
         pr_number = pr["number"]
+        source_branch = pr["head"]["ref"]  # Source branch (feature/bugfix)
+        target_branch = pr["base"]["ref"]  # Target branch (main/develop)
+
         artifact_name = f"Vulnerability Report-pr-{pr_number}"
         artifact = next((a for a in artifacts if a["name"] == artifact_name), None)
 
         if artifact:
             pr_reports[pr_number] = {
                 "title": pr["title"],
-                "branch": pr["head"]["ref"],  # Store branch name correctly
+                "branch": source_branch,
+                "target_branch": target_branch,  # ✅ Dynamically fetch target branch
                 "archive_download_url": artifact["archive_download_url"]
             }
 
     return pr_reports
+
 
 
 def download_report(download_url):

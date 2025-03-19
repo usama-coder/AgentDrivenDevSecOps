@@ -36,6 +36,9 @@ def apply_fix(issue):
         st.error("⚠️ Could not find the function to fix.")
 
 
+import hashlib
+
+
 def render_file_viewer(vulnerabilities):
     if not vulnerabilities:
         st.info("✅ No vulnerabilities detected!")
@@ -47,7 +50,7 @@ def render_file_viewer(vulnerabilities):
 
     for file_name, issues in file_vulnerabilities.items():
         with st.expander(f"📄 {file_name} ({len(issues)} issues)"):
-            for issue in issues:
+            for index, issue in enumerate(issues):
                 st.markdown(f"### 🔹 {issue['description']}")
                 st.markdown(f"**Severity:** {issue['severity']}")
                 st.code(issue["vulnerable_code"], language="python")
@@ -58,7 +61,10 @@ def render_file_viewer(vulnerabilities):
                     st.markdown("#### ✅ Recommended Fix Description:")
                     st.markdown(issue["description"])
 
-                    if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{file_name}_{issue['line']}"):
+                    # 🔹 Ensure the button key is unique using a hash
+                    unique_id = hashlib.md5(f"{file_name}_{issue['line']}_{index}".encode()).hexdigest()
+
+                    if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{unique_id}"):
                         apply_fix(issue)
 
                 st.divider()

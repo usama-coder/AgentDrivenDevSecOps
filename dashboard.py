@@ -16,13 +16,20 @@ st.sidebar.title("🔍 Select a Pull Request")
 # Fetch PRs and reports
 pr_reports = fetch_reports_for_all_prs()
 
+if "selected_pr" not in st.session_state:
+    st.session_state["selected_pr"] = None
+
+# Prepare PR dropdown options with dynamic target branch
 if pr_reports:
-    # Fix: Ensure `pr_reports` contains dictionaries, not strings
-    pr_options = {f"{data['title']} | {data['branch']}": pr_number for pr_number, data in pr_reports.items()}
+    pr_options = {
+        f"{data['branch']} ⟶ {data['target_branch']}": pr_number  # ✅ Dynamically show source -> target
+        for pr_number, data in pr_reports.items()
+    }
 
     # Auto-select latest PR on first run
-    if "selected_pr" not in st.session_state:
-        st.session_state["selected_pr"] = max(pr_options.values())  # Latest PR number
+    if st.session_state["selected_pr"] is None:
+        latest_pr_number = max(pr_options.values())  # Get the latest PR number
+        st.session_state["selected_pr"] = latest_pr_number
 
     # Dropdown for PR selection
     selected_pr_label = st.sidebar.selectbox("Choose a PR", options=pr_options.keys())
