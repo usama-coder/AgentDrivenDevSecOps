@@ -4,6 +4,7 @@ from ui.summary import display_summary
 from ui.file_viewer import render_file_viewer
 from ui.report_loader import load_vulnerabilities,fetch_reports_for_all_prs,download_report
 import streamlit as st
+from ui.github_status import render_github_action_status
 import json
 # ✅ Function to Load CSS File
 def load_css(file_paths):
@@ -12,7 +13,7 @@ def load_css(file_paths):
         with open(file_path, "r") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 st.sidebar.title("🔍 Select a Pull Request")
-
+render_github_action_status()
 # Fetch PRs and reports
 pr_reports = fetch_reports_for_all_prs()
 if not pr_reports:
