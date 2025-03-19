@@ -15,6 +15,10 @@ st.sidebar.title("🔍 Select a Pull Request")
 
 # Fetch PRs and reports
 pr_reports = fetch_reports_for_all_prs()
+if not pr_reports:
+    st.sidebar.info("🚨 No open pull requests found!")
+    st.warning("No data available because no pull requests exist.")
+    st.stop()
 
 if "selected_pr" not in st.session_state:
     st.session_state["selected_pr"] = None
