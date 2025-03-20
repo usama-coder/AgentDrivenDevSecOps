@@ -39,7 +39,7 @@ def display_summary(vulnerabilities):
     for vuln in vulnerabilities:
         file_vuln_counts[vuln["file"]] = file_vuln_counts.get(vuln["file"], 0) + 1
 
-    formatted_files = [{"#": i + 1, "File Name": file, "Total Issues": count}
+    formatted_files = [{"File Name": file, "Total Issues": count}
                        for i, (file, count) in enumerate(file_vuln_counts.items())]
 
     st.dataframe(formatted_files, use_container_width=True)
