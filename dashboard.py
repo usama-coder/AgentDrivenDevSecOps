@@ -15,6 +15,10 @@ if not pr_reports:
     st.warning("No data available because no pull requests exist.")
     st.stop()
 
+if not pr_reports:
+    st.sidebar.info("🚨 No open pull requests found!")
+    st.warning("No data available because no pull requests exist.")
+    st.stop()  # ✅ Stop further execution
 if "selected_pr" not in st.session_state:
     st.session_state["selected_pr"] = None
 
@@ -38,7 +42,6 @@ if pr_reports:
     if selected_pr_number != st.session_state["selected_pr"]:
         st.session_state["selected_pr"] = selected_pr_number
 
-    # Load vulnerabilities for selected PR
     vulnerabilities = load_vulnerabilities()
 
     # Sidebar Navigation

@@ -1,8 +1,9 @@
+import time
 import requests
 import streamlit as st
 
 def fetch_github_action_status():
-    """Fetch the latest GitHub Action workflow run status for the repository."""
+
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
     REPO_OWNER = st.secrets["REPO_OWNER"]
     REPO_NAME = st.secrets["REPO_NAME"]
@@ -30,17 +31,18 @@ def fetch_github_action_status():
 
 
 def render_github_action_status():
-    """Render GitHub Actions Status in the Streamlit Sidebar."""
+
+    # Fetch the latest GitHub status
     status, conclusion, action_url = fetch_github_action_status()
 
-    status_colors = {
+    status_mapping = {
         "queued": "🟡 Queued",
         "in_progress": "🔵 Running",
         "completed": "✅ Completed",
         "failure": "❌ Failed"
     }
 
-    conclusion_colors = {
+    conclusion_mapping = {
         "success": "✅ Success",
         "failure": "❌ Failed",
         "neutral": "⚪ Neutral"
@@ -48,13 +50,13 @@ def render_github_action_status():
 
     st.sidebar.title("🔄 GitHub Action Status")
 
-    if status in status_colors:
-        st.sidebar.info(f"**Workflow Status:** {status_colors[status]}")
+    if status in status_mapping:
+        st.sidebar.info(f"**Workflow Status:** {status_mapping[status]}")
     else:
         st.sidebar.info("🔄 Checking workflow status...")
 
-    if status == "completed" and conclusion in conclusion_colors:
-        st.sidebar.success(f"**Conclusion:** {conclusion_colors[conclusion]}")
+    if status == "completed" and conclusion in conclusion_mapping:
+        st.sidebar.success(f"**Conclusion:** {conclusion_mapping[conclusion]}")
     elif status == "in_progress":
         st.sidebar.warning("🟡 GitHub Action is currently running...")
 
@@ -62,6 +64,19 @@ def render_github_action_status():
     if action_url:
         st.sidebar.markdown(f"[🔍 View Workflow Details]({action_url})")
 
-    # Refresh Button to Check Status
+    # Auto-refresh if workflow is running
+    if status == "in_progress":
+        time.sleep(5)  # Wait 5 seconds before refreshing
+        st.rerun()
+
+    # If workflow is completed, auto-refresh once to show new data
+    if status == "completed" and "last_status" in st.session_state and st.session_state["last_status"] != "completed":
+        st.session_state["last_status"] = "completed"
+        st.rerun()
+
+    # Save last status in session state
+    st.session_state["last_status"] = status
+
+    # Refresh Button to Check Status Manually
     if st.sidebar.button("🔄 Refresh Status"):
         st.rerun()
