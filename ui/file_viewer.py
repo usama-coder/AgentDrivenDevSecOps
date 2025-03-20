@@ -50,12 +50,33 @@ def render_file_viewer(vulnerabilities):
         st.info("✅ No vulnerabilities detected!")
         return
 
+    st.subheader("📂 Vulnerabilities by File")
+    st.markdown("""
+        - Click on a file in the **detailed view** to explore specific vulnerabilities and suggested fixes.        
+    """)
+
+    # Track highest severity for each file
     file_vulnerabilities = {}
+    file_severity = {}
+
     for vuln in vulnerabilities:
         file_vulnerabilities.setdefault(vuln["file"], []).append(vuln)
+        severity = vuln["severity"].upper()
+
+        # Store highest severity for each file
+        if vuln["file"] not in file_severity or severity in ["HIGH", "MEDIUM"]:
+            file_severity[vuln["file"]] = severity
+
+    # Define severity color labels
+    severity_colors = {
+        "HIGH": "🔴",
+        "MEDIUM": "🟠",
+        "LOW": "🟢"
+    }
 
     for file_name, issues in file_vulnerabilities.items():
-        with st.expander(f"📄 {file_name} ({len(issues)} issues)"):
+        severity_label = severity_colors.get(file_severity[file_name], "⚪")
+        with st.expander(f"{severity_label} 📄 {file_name} ({len(issues)} issues)"):
             for index, issue in enumerate(issues):
                 st.markdown(f"### 🔹 {issue['description']}")
                 st.markdown(f"**Severity:** {issue['severity']}")
@@ -68,8 +89,15 @@ def render_file_viewer(vulnerabilities):
                     st.markdown(issue["description"])
                     # 🔹 Ensure the button key is unique using a hash
                     unique_id = hashlib.sha256(f"{file_name}_{issue['line']}_{index}".encode()).hexdigest()
-                    if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{unique_id}"):
-                        apply_fix(issue)
+                    fix_key = f"fix_applied_{unique_id}"
+
+                    # If the fix is applied, disable the button
+                    if st.session_state.get(fix_key, False):
+                        st.button(f"✅ Fix Applied - {file_name}:{issue['line']}", disabled=True, key=f"fixed_{unique_id}")
+                    else:
+                        if st.button(f"🛠️ Apply Fix - {file_name}:{issue['line']}", key=f"fix_{unique_id}"):
+                            apply_fix(issue)
+                            st.session_state[fix_key] = True  # ✅ Mark fix as applied
 
                 st.divider()
 
@@ -91,7 +119,7 @@ def update_github_file(file_path, fixed_function, original_function):
         st.error("❌ No source branch found for this PR!")
         return
 
-    GITHUB_BRANCH = st.session_state["selected_pr_branch"]  # Dynamically set the branch
+    GITHUB_BRANCH = st.session_state["selected_pr_branch"]
 
     file_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
