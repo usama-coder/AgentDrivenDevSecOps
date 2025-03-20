@@ -1,28 +1,52 @@
-/* ✅ Global Styling for the Dashboard */
+/* ✅ Restore Streamlit Light Theme */
 
-/* Center the Logo */
-.logo-container {
-    text-align: center;
-    margin-bottom: 20px;
+/* Reset Background to Default */
+body, .stApp {
+    background-color: white !important;
+    color: black !important;
 }
 
-/* Titles */
-.title {
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-    color: #1f77b4;
-}
-
-/* Sidebar Styling */
+/* Restore Sidebar Styling */
 [data-testid="stSidebarNav"] {
-    background-color: #f1f3f5;
-    padding: 10px;
+    background-color: #f1f3f5 !important;
+    color: black !important;
 }
 
-/* General Tables */
+/* Restore Text Colors */
+h1, h2, h3, h4, h5, h6, p, label, span, div {
+    color: black !important;
+}
+
+/* Restore Metric Card Styles */
+[data-testid="metric-container"] {
+    background-color: #e8f5e9 !important;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    color: black !important;
+}
+
+/* Restore Table Styling */
 .stDataFrame {
+    background-color: white !important;
+    color: black !important;
     border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: 14px;
+    border: 1px solid #ddd !important;
+}
+
+/* Restore Button Colors */
+.stButton > button {
+    background-color: #f0f0f0 !important;
+    color: black !important;
+    border-radius: 8px;
+}
+
+.stButton > button:hover {
+    background-color: #dcdcdc !important;
+}
+
+/* Restore Expander */
+.st-expander {
+    background-color: #f8f9fa !important;
+    color: black !important;
 }
