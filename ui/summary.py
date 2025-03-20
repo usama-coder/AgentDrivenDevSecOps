@@ -18,11 +18,7 @@ def display_summary(vulnerabilities):
     st.markdown('<h2 class="summary-title">🔒 Security Scan Summary</h2>', unsafe_allow_html=True)
 
 
-    st.markdown("""
-        <div class="logo-container">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Shield_check.svg/2048px-Shield_check.svg.png" width="60">
-            <h3 class="overview-title">Overview of Detected Security Issues</h3>
-        </div>
+    st.markdown("""<h3 class="overview-title">Overview of Detected Security Issues</h3>     
     """, unsafe_allow_html=True)
 
     # Metric Columns
