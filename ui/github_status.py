@@ -67,12 +67,12 @@ def render_github_action_status():
     # Auto-refresh if workflow is running
     if status == "in_progress":
         time.sleep(5)  # Wait 5 seconds before refreshing
-        st.experimental_rerun()
+        st.rerun()
 
     # If workflow is completed, auto-refresh once to show new data
     if status == "completed" and "last_status" in st.session_state and st.session_state["last_status"] != "completed":
         st.session_state["last_status"] = "completed"
-        st.experimental_rerun()
+        st.rerun()
 
     # Save last status in session state
     st.session_state["last_status"] = status
