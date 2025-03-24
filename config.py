@@ -1,2 +1,4 @@
-SNYK_API_TOKEN = 'your-snyk-api-token'
-AZURE_WEBHOOK_SECRET = 'your-azure-webhook-secret'
+
+GITHUB_TOKEN = "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"
+REPO_OWNER = "usamacgi"
+REPO_NAME = "DevSecOps"

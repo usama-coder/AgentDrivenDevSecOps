@@ -1,3 +1,5 @@
+import re
+
 from langchain import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -104,6 +106,17 @@ def filter_response(response):
 
 def run_remediation_chain(vulnerable_code):
     """Run the LLM remediation chain, reflect on its output, and adapt."""
+
+    if contains_sensitive_data(vulnerable_code):
+        print("⚠️ Sensitive information detected. Skipping LLM remediation.")
+        return (
+            "Vulnerable Code:\n"
+            f"{vulnerable_code}\n\n"
+            "Recommended Fix:\n"
+            "Do not hardcode secrets such as passwords or API keys.\n\n"
+            "Recommended fix Description:\n"
+            "Move sensitive information to environment variables or a secure vault and read them securely at runtime."
+        )
     max_attempts = 2
     attempt = 0
     reflections = None
@@ -156,9 +169,6 @@ def run_remediation_chain(vulnerable_code):
         filtered_response = "Remediation unsuccessful. Please review manually."
 
     return filtered_response
-
-
-import re
 
 
 def extract_function_from_file(file_path, line_number):
@@ -240,3 +250,12 @@ def clean_fix(recommended_fix):
     cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
     cleaned_fix = cleaned_fix.strip()
     return cleaned_fix.strip()
+
+def contains_sensitive_data(code):
+    """Check for hardcoded secrets like passwords, tokens, keys."""
+    patterns = [
+        r'(?i)(password|passwd|pwd)\s*=\s*[\'"]\w+',
+        r'(?i)(api_key|apikey|secret|token|auth)\s*=\s*[\'"]\w+',
+        r'(?i)(AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)\s*=\s*[\'"]\w+',
+    ]
+    return any(re.search(pattern, code) for pattern in patterns)
