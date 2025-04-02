@@ -5,5 +5,20 @@
     "ghp_abcdefgh1234567890EXAMPLETOKEN",
     "ghp_abcdefgh1234567890EXAMPLETOKEN"
   ],
-
+  "DATABASE_CREDENTIALS": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "admin",
+    "password": "supersecretpassword"
+  },
+  "FIREBASE_CREDENTIALS": {
+    "type": "service_account",
+    "project_id": "my-project-id",
+    "private_key_id": "abcdef1234567890",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIE...==\n-----END PRIVATE KEY-----\n",
+    "client_email": "firebase-adminsdk@my-project-id.iam.gserviceaccount.com",
+    "client_id": "1234567890abcdef",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token"
+  }
 }

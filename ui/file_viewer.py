@@ -11,12 +11,12 @@ from chains.remediation_chain import (
     overwrite_function_in_file
 )
 def clean_recommended_fix(recommended_fix):
-    cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
-    cleaned_fix = cleaned_fix.strip()
-    return cleaned_fix.strip()
+    """Remove markdown code block formatting from the recommended fix."""
+    return re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix).strip()
 
 
 def apply_fix(issue):
+    """Apply the LLM-recommended fix to the vulnerable file."""
     file_name = issue["file"]
     line_number = issue["line"]
     recommended_fix = clean_recommended_fix(issue["recommended_fix"])
@@ -28,26 +28,28 @@ def apply_fix(issue):
     extracted_function = extract_function_from_file(file_name, line_number)
 
     if not is_valid_python_code(recommended_fix):
-        st.warning(
-            f"⚠️ The recommended fix for `{file_name}` at line `{line_number}` is not a direct code replacement.")
+        st.warning(f"⚠️ The recommended fix for `{file_name}` at line `{line_number}` is not valid Python code.")
         st.markdown("### Suggested Manual Fix:")
-        st.info(issue["recommended_fix"])
+        st.code(issue["recommended_fix"], language="python")
         return
 
     if extracted_function:
         fixed_function = llm_replace_vulnerability(
-            extracted_function, issue["vulnerable_code"], recommended_fix        )
+            extracted_function, issue["vulnerable_code"], recommended_fix
+        )
 
         update_github_file(file_name, fixed_function, extracted_function)
         st.success(
-            f"✅ LLM Applied Fix to {file_name} at Line {line_number} (Branch: {st.session_state['selected_pr_branch']})!")
+            f"✅ LLM Applied Fix to `{file_name}` at Line {line_number} (Branch: `{st.session_state['selected_pr_branch']}`)!"
+        )
     else:
-        st.error("⚠️ Could not find the function to fix.")
+        st.error("⚠️ Could not find the function to fix in the provided file and line number.")
 
 
 def render_file_viewer(vulnerabilities):
+    """Render vulnerabilities grouped by file with fix options."""
     if not vulnerabilities:
-        st.info("✅ No vulnerabilities detected!")
+        st.success("✅ No vulnerabilities detected!")
         return
 
     st.subheader("📂 Vulnerabilities by File")
@@ -85,9 +87,8 @@ def render_file_viewer(vulnerabilities):
                 if file_name.endswith(".py") and issue["recommended_fix"] != "No recommended fix provided.":
                     st.markdown("#### ✅ Recommended Fix:")
                     st.code(issue["recommended_fix"], language="python")
-                    st.markdown("#### ✅ Recommended Fix Description:")
-                    st.markdown(issue["description"])
-                    # 🔹 Ensure the button key is unique using a hash
+
+                    # Generate a unique key for session state tracking
                     unique_id = hashlib.sha256(f"{file_name}_{issue['line']}_{index}".encode()).hexdigest()
                     fix_key = f"fix_applied_{unique_id}"
 
@@ -103,6 +104,7 @@ def render_file_viewer(vulnerabilities):
 
 
 def is_valid_python_code(code):
+    """Check if the provided code is valid Python."""
     try:
         ast.parse(code)
         return True
@@ -111,6 +113,7 @@ def is_valid_python_code(code):
 
 
 def update_github_file(file_path, fixed_function, original_function):
+    """Update the given file on GitHub with the fixed function."""
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
     REPO_OWNER = st.secrets["REPO_OWNER"]
     REPO_NAME = st.secrets["REPO_NAME"]
@@ -130,7 +133,7 @@ def update_github_file(file_path, fixed_function, original_function):
         file_data = response.json()
         sha = file_data["sha"]
         current_content = base64.b64decode(file_data["content"]).decode("utf-8")
-        fixed_function= clean_fix(fixed_function)
+        fixed_function = clean_fix(fixed_function)
 
         if isinstance(original_function, list):
             original_function = "\n".join(original_function)
@@ -138,11 +141,11 @@ def update_github_file(file_path, fixed_function, original_function):
         if original_function in current_content:
             updated_content = current_content.replace(original_function, fixed_function)
         else:
-            st.error(f"⚠️ Could not find the function in {file_path}. No changes made.")
+            st.error(f"⚠️ Could not find the function in `{file_path}`. No changes made.")
             return
 
         payload = {
-            "message": f" Auto-fix applied to {file_path}",
+            "message": f"Auto-fix applied to {file_path}",
             "content": base64.b64encode(updated_content.encode()).decode("utf-8"),
             "sha": sha,
             "branch": GITHUB_BRANCH
@@ -151,16 +154,14 @@ def update_github_file(file_path, fixed_function, original_function):
         update_response = requests.put(file_url, headers=headers, json=payload)
 
         if update_response.status_code == 200:
-            st.success(f"✅ Fix successfully applied and pushed to GitHub: {file_path}")
+            st.success(f"✅ Fix successfully applied and pushed to GitHub: `{file_path}`")
         else:
-            st.error(f"❌ Failed to update {file_path} on GitHub! Error: {update_response.text}")
+            st.error(f"❌ Failed to update `{file_path}` on GitHub! Error: {update_response.text}")
 
     else:
-        st.error(f"❌ Could not fetch {file_path} from GitHub. Error: {response.text}")
+        st.error(f"❌ Could not fetch `{file_path}` from GitHub. Error: {response.text}")
 
 
 def clean_fix(recommended_fix):
-
-    cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
-    cleaned_fix = cleaned_fix.strip()
-    return cleaned_fix.strip()
+    """Clean recommended fix code by removing unnecessary formatting."""
+    return re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix).strip()

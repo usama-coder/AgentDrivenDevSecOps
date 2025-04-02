@@ -1,26 +1,46 @@
-/* 🔹 Dashboard Page Styling */
+/* 🔹 Dashboard Page Styling (Dark Mode) */
 
 /* Dashboard Title */
 .dashboard-title {
     text-align: center;
     font-size: 30px;
     font-weight: bold;
-    color: #1f77b4;
+    color: #1db4ff; /* Light blue */
 }
 
 /* File Table */
 .dashboard-table {
     border-radius: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid #444;
     font-size: 14px;
     width: 100%;
+    background-color: #222; /* Dark background */
+    color: white;
 }
 
 /* Metric Cards */
 .dashboard-metrics div[data-testid="metric-container"] {
-    background-color: #e8f5e9;
+    background-color: #333; /* Darker green */
     padding: 15px;
     border-radius: 10px;
     text-align: center;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 2px 2px 8px rgba(255,255,255,0.1);
+}
+/* ✅ Fix Logo & Text Alignment */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between logo and text */
+    margin-bottom: 10px;
+}
+
+.logo-icon {
+    width: 50px;
+    height: auto;
+}
+
+.overview-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: bold;
 }

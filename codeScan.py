@@ -13,12 +13,11 @@ def connect_database():
 
 def create_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('0.0.0.0', 8080))
+    server_socket.bind(('127.0.0.1', 8080))
     server_socket.listen(5)
     return server_socket
 
 def hash_password(password):
-    """This function uses MD5, which is considered a weak hashing algorithm."""
     return hashlib.md5(password.encode()).hexdigest()
 
 import random
