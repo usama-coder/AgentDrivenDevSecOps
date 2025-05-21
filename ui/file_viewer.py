@@ -119,7 +119,9 @@ def update_github_file(file_path, fixed_function, original_function):
         st.error("❌ No source branch found for this PR!")
         return
 
+
     GITHUB_BRANCH = st.session_state["selected_pr_branch"]
+
 
     file_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}

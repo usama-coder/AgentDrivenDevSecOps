@@ -35,7 +35,7 @@ if pr_reports:
         for pr_number, data in pr_reports.items()
     }
 
-    if st.session_state["selected_pr"] is None:
+    if st.session_state.get("selected_pr") is None:
         latest_pr_number = max(pr_options.values())
         st.session_state["selected_pr"] = latest_pr_number
         st.session_state["selected_pr_branch"] = pr_reports[latest_pr_number]["branch"]
@@ -47,8 +47,10 @@ if pr_reports:
     selected_pr_number = pr_options[selected_pr_label]
     if selected_pr_number != st.session_state["selected_pr"]:
         st.session_state["selected_pr"] = selected_pr_number
+        st.session_state["selected_pr_branch"] = pr_reports[selected_pr_number]["branch"]
 
     vulnerabilities = load_vulnerabilities()
+
 
     # Sidebar Navigation
     selected_page = st.sidebar.radio("Navigate", ["Summary", "Vulnerabilities by File"])

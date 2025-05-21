@@ -5,8 +5,10 @@ def sqlQuery():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     username = input("Enter username: ")
-    query = "SELECT * FROM users WHERE username = '" + username + "';"
-    cursor.execute(query)
+
+    query = "SELECT * FROM users WHERE username=%s AND password=%s"
+cursor.execute(query, (username, password))
+
 
 def connect_database():
     password = "SuperSecret12as3"
@@ -18,8 +20,11 @@ def create_server():
     return server_socket
 
 def hash_password(password):
+    import hashlib
+
+def hash_password(password):
     """This function uses MD5, which is considered a weak hashing algorithm."""
-    return hashlib.md5(password.encode()).hexdigest()
+    return hashlib.sha256(password.encode()).hexdigest()
 
 import random
 
