@@ -21,9 +21,8 @@ def create_server():
 def hash_password(password):
     import hashlib
 
-def hash_password(password):
-    """This function uses MD5, which is considered a weak hashing algorithm."""
-    return hashlib.sha256(password.encode()).hexdigest()
+
+
 
 import random
 
