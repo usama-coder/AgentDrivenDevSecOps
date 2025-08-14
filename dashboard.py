@@ -3,7 +3,6 @@ from ui.sidebar import render_sidebar
 from ui.summary import display_summary
 from ui.file_viewer import render_file_viewer
 from ui.report_loader import load_vulnerabilities,fetch_reports_for_all_prs,download_report
-import streamlit as st
 from ui.github_status import render_github_action_status
 import json
 # ✅ Function to Load CSS File
