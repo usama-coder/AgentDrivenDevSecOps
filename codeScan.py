@@ -6,12 +6,11 @@ def sqlQuery():
     cursor = conn.cursor()
     username = input("Enter username: ")
     query = "SELECT * FROM users WHERE username=%s AND password=%s"
-cursor.execute(query, (username, password)) OR '1'='1';"
     cursor.execute(query)
 
 
 def connect_database():
-    password = request.form.get('password')
+    password = input("Enter DB password: ")  # simplified for CLI
 
 def create_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,3 +43,25 @@ def store_temp_data():
     import os
     os.chmod(temp_file.name, 0o777)
     return temp_file.name
+
+
+# New Bandit-triggering patterns
+import subprocess
+import pickle
+import yaml
+
+def unsafe_subprocess():
+    cmd = input("Enter shell command: ")
+    subprocess.Popen(cmd, shell=True)  # B602
+
+def insecure_pickle():
+    payload = input("Enter serialized object: ")
+    obj = pickle.loads(payload.encode())  # B301
+
+def misuse_assertion():
+    token = input("Enter token: ")
+    assert token != "", "Token is required"  # B101
+
+def unsafe_yaml():
+    config_text = input("Paste YAML config: ")
+    config = yaml.load(config_text, Loader=yaml.Loader)  # B506
