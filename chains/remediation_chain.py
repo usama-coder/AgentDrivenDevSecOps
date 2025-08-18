@@ -2,7 +2,9 @@ import os
 from langchain import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
-
+import re
+import requests
+import base64
 from logger import log_action
 
 # Initialize the LLM
@@ -159,35 +161,43 @@ def run_remediation_chain(vulnerable_code):
     return filtered_response
 
 
-import re
+def extract_function_from_file(file_path, line_number,GITHUB_BRANCH):
+    """Fetches the file from the GitHub PR branch and extracts the function containing the line number."""
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+    REPO_OWNER = os.getenv("REPO_OWNER")
+    REPO_NAME = os.getenv("REPO_NAME")
+    BRANCH = GITHUB_BRANCH
 
 
-def extract_function_from_file(file_path, line_number):
-    """Extracts the function from a file that contains the given line number."""
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
+    response = requests.get(url, headers=headers, params={"ref": BRANCH})
 
-        function_lines = []
-        inside_function = False
+    if response.status_code != 200:
+        print(f"❌ Failed to fetch file from GitHub: {response.status_code}, {response.text}")
+        return ""
 
-        for i, line in enumerate(lines):
-            if i + 1 == line_number:
-                inside_function = True  # Start extracting function
+    content = base64.b64decode(response.json()["content"]).decode("utf-8")
+    lines = content.splitlines()
 
-            if inside_function:
-                function_lines.append(line)
+    print(f"📄 Successfully fetched file. Showing first 20 lines:\n" + "\n".join(lines[:20]))
 
-                # Stop when an empty new line is found (indicating end of function)
-                if line.strip() == "":
-                    break
+    function_lines = []
+    inside_function = False
 
-        # Ensure the extracted function is a string
-        return "".join(function_lines).strip()
+    for i, line in enumerate(lines):
+        if i + 1 == line_number:
+            inside_function = True
 
-    except FileNotFoundError:
-        print(f"❌ Error: File '{file_path}' not found.")
-        return None
+        if inside_function:
+            function_lines.append(line)
+            if line.strip() == "":
+                break
+
+    print("🔍 Extracted function:")
+    print("\n".join(function_lines))
+
+    return "\n".join(function_lines).strip()
 
 
 def llm_replace_vulnerability(function_code, vulnerability, recommended_fix):
@@ -208,7 +218,7 @@ def llm_replace_vulnerability(function_code, vulnerability, recommended_fix):
 
     **Instructions:**
     - Identify the vulnerable line and **replace it** with the recommended fix .
-    - Keep the **original function structure** and indentation unchanged.
+    - Keep the **original function structure and context ** and indentation unchanged.
     - Do not introduce unnecessary changes.
 
 
@@ -223,21 +233,4 @@ def llm_replace_vulnerability(function_code, vulnerability, recommended_fix):
         "recommended_fix": recommended_fix
     })
 
-def overwrite_function_in_file(file_path, old_function, new_function):
 
-    with open(file_path, "r", encoding="utf-8") as f:
-        file_content = f.read()
-
-    old_func_str = "".join(old_function).strip()
-    new_func_str = clean_fix(new_function.strip())
-    updated_content = file_content.replace(old_func_str, new_func_str)
-
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(updated_content)
-
-    print("✅ Code Fix Applied Successfully!")
-def clean_fix(recommended_fix):
-
-    cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
-    cleaned_fix = cleaned_fix.strip()
-    return cleaned_fix.strip()
