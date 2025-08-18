@@ -7,8 +7,8 @@ import hashlib
 
 from chains.remediation_chain import (
     extract_function_from_file,
-    llm_replace_vulnerability,
-    overwrite_function_in_file
+    llm_replace_vulnerability
+
 )
 def clean_recommended_fix(recommended_fix):
     cleaned_fix = re.sub(r"```[a-zA-Z]*\n?", "", recommended_fix)
@@ -25,7 +25,8 @@ def apply_fix(issue):
         st.error("❌ No source branch selected! Please select a PR before applying fixes.")
         return
 
-    extracted_function = extract_function_from_file(file_name, line_number)
+    GITHUB_BRANCH = st.session_state["selected_pr_branch"]
+    extracted_function = extract_function_from_file(file_name, line_number,GITHUB_BRANCH)
 
     if not is_valid_python_code(recommended_fix):
         st.warning(
