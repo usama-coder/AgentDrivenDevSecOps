@@ -10,7 +10,7 @@ def sqlQuery():
 
 
 def connect_database():
-    password = "rootjklfdg"
+    password = "rootjklfdgssss"
 
 def create_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
