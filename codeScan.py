@@ -5,8 +5,8 @@ def sqlQuery():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     username = input("Enter username: ")
-    query = "SELECT * FROM users WHERE username = '" + username + "' OR '1'='1';"  # B608: SQL injection
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE username = %s"
+    cursor.execute(query, (username,))
 
 
 def connect_database():
