@@ -5,7 +5,8 @@ def sqlQuery():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     username = input("Enter username: ")
-    query = "SELECT * FROM users WHERE username = '" + username + "' OR '1'='1';"
+    query = "SELECT * FROM users WHERE username=%s AND password=%s"
+cursor.execute(query, (username, password)) OR '1'='1';"
     cursor.execute(query)
 
 
