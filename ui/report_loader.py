@@ -80,10 +80,10 @@ def load_vulnerabilities():
         severity_match = re.search(r"\*\*Severity\*\*: (.*?)\n", entry, re.DOTALL)
         severity = severity_match.group(1).strip() if severity_match else "LOW"
 
-        vulnerable_code_match = re.search(r"#### Vulnerable Code\n```python\n(.*?)```", entry, re.DOTALL)
+        vulnerable_code_match = re.search(r"#### Vulnerable Code\s*```(?:\w+)?\s*(.*?)```", entry, re.DOTALL)
         vulnerable_code = vulnerable_code_match.group(1).strip() if vulnerable_code_match else "No vulnerable code provided."
 
-        fix_match = re.search(r"#### Recommended Fix Code\n```python\n(.*?)```", entry, re.DOTALL)
+        fix_match = re.search(r"#### Recommended Fix Code\s*```(?:\w+)?\s*(.*?)```", entry, re.DOTALL)
         recommended_fix = fix_match.group(1).strip() if fix_match else "No recommended fix provided."
 
         recommendation_match = re.search(r"#### Recommendation Description\n(.*?)\n", entry, re.DOTALL)
@@ -99,7 +99,6 @@ def load_vulnerabilities():
             "recommendation_description": recommendation_description
         })
 
-    print(f"✅ Extracted {len(vulnerabilities)} vulnerabilities successfully!")
     return vulnerabilities
 
 def fetch_reports_for_all_prs():
@@ -158,7 +157,10 @@ def download_report(download_url):
             for file in zip_ref.namelist():
                 if file.endswith("vulnerability_report.md"):  # Ensure correct file is extracted
                     with zip_ref.open(file) as report_file:
-                        return report_file.read().decode("utf-8")
+                        content = report_file.read().decode("utf-8")
+                        with open("downloaded_report_debug.md", "w", encoding="utf-8") as f:
+                            f.write(content)
+                        return content
 
     st.error("❌ Failed to extract vulnerability report from artifact.")
     return None
