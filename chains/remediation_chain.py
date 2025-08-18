@@ -1,3 +1,4 @@
+import os
 from langchain import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -8,7 +9,7 @@ from logger import log_action
 llm = ChatOpenAI(
     model="gpt-3.5-turbo",
     temperature=0.7,
-    openai_api_key="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",
+    openai_api_key=os.getenv("OPENAI_API_KEY")
 )
 
 
