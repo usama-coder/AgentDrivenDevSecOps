@@ -11,7 +11,7 @@ cursor.execute(query, (username, password)) OR '1'='1';"
 
 
 def connect_database():
-    password = "sdsadsd"
+    password = request.form.get('password')
 
 def create_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
