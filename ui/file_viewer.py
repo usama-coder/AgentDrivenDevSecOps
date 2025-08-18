@@ -55,7 +55,6 @@ def render_file_viewer(vulnerabilities):
         - Click on a file in the **detailed view** to explore specific vulnerabilities and suggested fixes.        
     """)
 
-    # Track highest severity for each file
     file_vulnerabilities = {}
     file_severity = {}
 
@@ -80,7 +79,11 @@ def render_file_viewer(vulnerabilities):
             for index, issue in enumerate(issues):
                 st.markdown(f"### 🔹 {issue['description']}")
                 st.markdown(f"**Severity:** {issue['severity']}")
-                st.code(issue["vulnerable_code"], language="python")
+                code = issue["vulnerable_code"].strip()
+                if not code or code.startswith("❌"):
+                    st.warning(issue["vulnerable_code"])
+                else:
+                    st.code(code, language="python")
 
                 if file_name.endswith(".py") and issue["recommended_fix"] != "No recommended fix provided.":
                     st.markdown("#### ✅ Recommended Fix:")
