@@ -5,12 +5,13 @@ def sqlQuery():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     username = input("Enter username: ")
-    query = "SELECT * FROM users WHERE username = '" + username + "';"
-    cursor.execute(query)
+    query = "SELECT * FROM users WHERE username = %s"
+cursor.execute(query, (username,))
 
 
 def connect_database():
-    password = "SuperSecret12as3"
+    password = input("Enter DB password: ")
+    print("Connecting...")
 
 def create_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,10 +20,6 @@ def create_server():
     return server_socket
 
 def hash_password(password):
-    import hashlib
-
-def hash_password(password):
-    """This function uses MD5, which is considered a weak hashing algorithm."""
     return hashlib.sha256(password.encode()).hexdigest()
 
 import random
@@ -39,3 +36,24 @@ def store_temp_data():
     temp_file.write(b"Sensitive data")
     temp_file.close()
     return temp_file.name
+
+import subprocess
+import yaml
+import tempfile
+
+def insecure_subprocess():
+    cmd = input("Enter command: ")
+    subprocess.run(cmd, shell=True)  # B602
+
+def assert_used_as_control():
+    config_loaded = False
+    assert config_loaded, "Config must be loaded before proceeding."  # B101
+
+def yaml_loader_issue():
+    raw_yaml = input("Paste YAML config: ")
+    config = yaml.load(raw_yaml, Loader=yaml.Loader)  # B506
+
+def bad_tempfile():
+    temp_path = tempfile.mktemp()  # B108
+    with open(temp_path, "w") as f:
+        f.write("insecure temp file content")
